@@ -1,0 +1,33 @@
+VENV := venv
+PYTHON := $(VENV)/bin/python3
+PIP := $(VENV)/bin/pip
+MAIN := fly_in.py
+
+.PHONY: install run debug clean lint lint-strict
+
+all: install
+
+install:
+	python3 -m venv $(VENV)
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+	$(PIP) install .
+
+run:
+	$(PYTHON) $(MAIN)
+
+debug:
+	$(PYTHON) -m pdb $(MAIN)
+
+clean:
+	rm -rf $(VENV) build dist *.egg-info .mypy_cache
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+
+lint:
+	$(VENV)/bin/flake8 .
+	$(VENV)/bin/mypy . --warn-return-any --warn-unused-ignores \
+		--ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+
+lint-strict:
+	$(VENV)/bin/flake8 .
+	$(VENV)/bin/mypy . --strict
