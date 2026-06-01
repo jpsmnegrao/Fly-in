@@ -11,7 +11,7 @@ install:
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
-	$(PIP) install .
+# 	$(PIP) install .
 
 run:
 	$(PYTHON) $(MAIN)
