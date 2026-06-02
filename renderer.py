@@ -18,11 +18,10 @@ class MapRenderer:
         self.screen = pygame.display.set_mode((800, 800))
         self.clock = pygame.time.Clock()
         self.dt = 0
-        # States
+        # states
         self.running = True
         self.running_animation = False
-        # Animation sprites
-
+        # animation sprites
         self.walk = pygame.transform.flip(
             pygame.image.load("assets/wwalk.png"), True, False)
         self.walk.set_colorkey((128, 128, 192))
@@ -32,7 +31,7 @@ class MapRenderer:
         self.walk_up = pygame.transform.flip(
             pygame.image.load("assets/wwalku.png"), True, False)
         self.walk_up.set_colorkey((128, 128, 192))
-        # Font and title
+        # font and title
         self.font = pygame.font.SysFont(None, 25)
         self.title = self.font.render(" ====  Fly-In  ==== ", True, "gray")
         self.title_pos = self.title.get_rect(center=(400, 25))
