@@ -2,12 +2,13 @@
 """
 
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
 class Zone:
     """jambo"""
+    hub_type: str
     name: str
     x: int
     y: int
@@ -27,6 +28,6 @@ class Connection:
 @dataclass
 class MapData:
     """jambo"""
-    nb_drones: int
-    zones: list[Zone]
-    connections: list[Connection]
+    nb_drones: int = 0
+    zones: list[Zone] = field(default_factory=list)
+    connections: list[Connection] = field(default_factory=list)
