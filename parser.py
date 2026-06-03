@@ -180,10 +180,3 @@ class ParserReturn:
         except PermissionError:
             raise ValueError(f"No permission to open '{self.filename}'")
         return map_config
-
-
-if __name__ == "__main__":
-    p = ParserReturn("maps/hard/01_maze_nightmare.txt")
-    result = p.parser()
-    # from pprint import pprint
-    # pprint(result)

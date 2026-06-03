@@ -1,7 +1,7 @@
 VENV := venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
-MAIN := fly_in.py
+MAIN := main.py
 
 .PHONY: install run debug clean lint lint-strict
 
@@ -14,7 +14,7 @@ install:
 # 	$(PIP) install .
 
 run:
-	$(PYTHON) $(MAIN)
+	$(VENV)/bin/python $(MAIN)
 
 debug:
 	$(PYTHON) -m pdb $(MAIN)
