@@ -105,7 +105,7 @@ class ParserReturn:
         try:
             zone_a: str = connection_values[1].split("-")[0]
             zone_b: str = connection_values[1].split("-")[1].strip()
-        except ValueError:
+        except IndexError:
             raise ValueError("Connection has incorrect format "
                              "(<name1>-<name2>)")
         if not zone_a or not zone_b:
@@ -185,5 +185,5 @@ class ParserReturn:
 if __name__ == "__main__":
     p = ParserReturn("maps/hard/01_maze_nightmare.txt")
     result = p.parser()
-    from pprint import pprint
-    pprint(result)
+    # from pprint import pprint
+    # pprint(result)
