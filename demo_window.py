@@ -18,7 +18,7 @@ class DemoWindow():
         pygame.display.set_caption("==== Fly-In ====")
         self.map_data = map_data
         # display and animation timing
-        self.screen = pygame.display.set_mode((800, 800))
+        self.screen = pygame.display.set_mode((1600, 800))
         self.clock = pygame.time.Clock()
         self.map_renderer = MapRenderer(map_data, self.screen)
         # states
@@ -37,19 +37,18 @@ class DemoWindow():
         # font and title
         self.font = pygame.font.SysFont(None, 25)
         self.title = self.font.render(" ====  Fly-In  ==== ", True, "gray")
-        self.title_pos = self.title.get_rect(center=(400, 25))
-        # map area and dimension offsets
-        self.map_x = 95
-        self.map_y = 60
-        self.map_size = 610
+        self.title_pos = self.title.get_rect(center=(800, 25))
         # animation step
         self.frame_height = self.walk.get_height() // 15
         self.current_frame = 0
         self.frame_timer = 0
         self.frame_direction = 1
         self.speed: float = 590 / 5000
-        self.x: float = self.map_x + 10
-        self.y: float = self.map_y + 305 - self.frame_height // 2
+        self.x: float = self.map_data.map_x + 10
+        self.y: float = (
+            self.map_data.map_y + self.map_data.map_height // 2
+            - self.frame_height // 2
+        )
 
     def run_renderer(self) -> None:
         while self.running:
@@ -64,14 +63,19 @@ class DemoWindow():
                         self.frame_timer = 0
                         self.frame_direction = 1
                     if event.key == pygame.K_0 or event.key == pygame.K_KP0:
-                        self.x = 95 + 10
+                        self.x = self.map_data.map_x + 10
                         self.current_frame = 0
                         self.frame_timer = 0
                         self.running_animation = False
             dt = self.clock.tick(60)
             self.screen.fill("black")
             self.screen.blit(self.title, self.title_pos)
-            map_area = pygame.Rect((800 - 610) // 2, 50, 610, 610)
+            map_area = pygame.Rect(
+                    self.map_data.map_x,
+                    self.map_data.map_y,
+                    self.map_data.map_width,
+                    self.map_data.map_height
+                )
             pygame.draw.rect(self.screen, "gray", map_area)
             self.map_renderer.draw_connections()
             self.map_renderer.draw_zones()
@@ -88,8 +92,10 @@ class DemoWindow():
                         self.frame_direction *= -1
                     self.frame_timer = 0
                 self.x += self.speed * dt
-                if self.x > 95 + 610 - 110:
-                    self.x = 95 + 610 - 110
+                if self.x > self.map_data.map_x + self.map_data.map_width \
+                        - 110:
+                    self.x = (
+                        self.map_data.map_x + self.map_data.map_width - 110)
                     self.running_animation = False
             pygame.display.flip()
         pygame.quit()

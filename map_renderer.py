@@ -13,8 +13,10 @@ class MapRenderer():
         """jambo"""
         self.map_data = map_data
         self.screen = screen
-        self.max_x = 0
-        self.max_y = 0
+        self.map_x = self.map_data.map_x
+        self.map_y = self.map_data.map_y
+        self.map_width = self.map_data.map_width
+        self.map_height = self.map_data.map_height
         self.min_x = 0
         self.min_y = 0
         self.scale_factor: float = 100.0
@@ -34,16 +36,18 @@ class MapRenderer():
         self.zone_dict = {zone.name: zone for zone in self.map_data.zones}
         range_x = self.max_x - self.min_x
         range_y = self.max_y - self.min_y
-        usable = self.map_size - 80
+        usable_x = self.map_width - 80
+        usable_y = self.map_height - 80
         if range_x == 0 and range_y == 0:
-            self.scale_factor = float(min(usable, 100))
+            self.scale_factor = 100.0
         elif range_x == 0:
-            self.scale_factor = float(min(usable // range_y, 100))
+            self.scale_factor = float(min(usable_y // range_y, 150))
         elif range_y == 0:
-            self.scale_factor = float(min(usable // range_x, 100))
+            self.scale_factor = float(min(usable_x // range_x, 150))
         else:
             self.scale_factor = float(
-                min(usable // range_x, usable // range_y, 100))
+                min(usable_x // range_x, usable_y // range_y, 150)
+            )
         self.zone_radius = max(5, int(self.scale_factor * 0.3))
 
     def draw_zones(self) -> None:
@@ -66,6 +70,9 @@ class MapRenderer():
                 pygame.draw.polygon(self.screen, zone.color, [
                     (x, y-r), (x+r, y), (x, y+r), (x-r, y)]
                 )
+                pygame.draw.polygon(self.screen, "black", [
+                    (x, y-r), (x+r, y), (x, y+r), (x-r, y)], 3
+                )
             if zone.zone_type == "priority":
                 points = [
                     (x, y-r),
@@ -87,13 +94,20 @@ class MapRenderer():
             start = self.zone_position(self.zone_dict[connection.zone_a])
             end = self.zone_position(self.zone_dict[connection.zone_b])
             pygame.draw.line(self.screen, "black", start, end, 3)
+            rect = pygame.Rect(
+                0, 0, max(1, self.zone_radius),
+                max(1, self.zone_radius // 2)
+            )
+            rect.center = ((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
+            pygame.draw.rect(self.screen, "white", rect)
+            pygame.draw.rect(self.screen, "black", rect, 2)
 
     def zone_position(self, zone: Zone) -> tuple[int, int]:
         """jambo"""
         coords_center_x = (self.min_x + self.max_x) / 2
         coords_center_y = (self.min_y + self.max_y) / 2
-        screen_center_x = self.map_x + self.map_size / 2
-        screen_center_y = self.map_y + self.map_size / 2
+        screen_center_x = self.map_x + self.map_width / 2
+        screen_center_y = self.map_y + self.map_height / 2
         screen_x = (
             screen_center_x + (zone.x - coords_center_x) *
             self.scale_factor)

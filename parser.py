@@ -83,7 +83,8 @@ class ParserReturn:
             y=y,
             zone_type=zone_type,
             color=color,
-            max_drones=max_drones
+            max_drones=max_drones,
+            drone_count=0
         )
 
     def connection_parser(self, line: str) -> Connection:

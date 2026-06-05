@@ -15,6 +15,7 @@ class Zone:
     zone_type: str
     color: str
     max_drones: int
+    drone_count: int
 
 
 @dataclass
@@ -31,3 +32,7 @@ class MapData:
     nb_drones: int = 0
     zones: list[Zone] = field(default_factory=list)
     connections: list[Connection] = field(default_factory=list)
+    map_x: int = 95
+    map_y: int = 60
+    map_width: int = 1400
+    map_height: int = 610
