@@ -2,6 +2,11 @@ VENV := venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
 MAIN := main.py
+MAP ?= maps/medium/02_circular_loop.txt
+
+# maps/easy/01_linear_path.txt
+# maps/medium/02_circular_loop.txt
+# maps/hard/01_maze_nightmare.txt
 
 .PHONY: install run debug clean lint lint-strict
 
@@ -14,7 +19,7 @@ install:
 # 	$(PIP) install .
 
 run:
-	$(VENV)/bin/python $(MAIN)
+	$(VENV)/bin/python $(MAIN) $(MAP)
 
 debug:
 	$(PYTHON) -m pdb $(MAIN)
