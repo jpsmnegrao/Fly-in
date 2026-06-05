@@ -17,7 +17,7 @@ class MapRenderer():
         self.max_y = 0
         self.min_x = 0
         self.min_y = 0
-        self.scale_factor: float = 80.0
+        self.scale_factor: float = 100.0
         self.zone_radius = max(5, int(self.scale_factor * 0.3))
         # map area and dimension offsets
         self.map_x = 95
@@ -32,6 +32,19 @@ class MapRenderer():
         self.min_x = min(zone.x for zone in self.map_data.zones)
         self.min_y = min(zone.y for zone in self.map_data.zones)
         self.zone_dict = {zone.name: zone for zone in self.map_data.zones}
+        range_x = self.max_x - self.min_x
+        range_y = self.max_y - self.min_y
+        usable = self.map_size - 80
+        if range_x == 0 and range_y == 0:
+            self.scale_factor = float(min(usable, 100))
+        elif range_x == 0:
+            self.scale_factor = float(min(usable // range_y, 100))
+        elif range_y == 0:
+            self.scale_factor = float(min(usable // range_x, 100))
+        else:
+            self.scale_factor = float(
+                min(usable // range_x, usable // range_y, 100))
+        self.zone_radius = max(5, int(self.scale_factor * 0.3))
 
     def draw_zones(self) -> None:
         """jambo"""

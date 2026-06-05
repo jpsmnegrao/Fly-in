@@ -2,7 +2,7 @@ VENV := venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
 MAIN := main.py
-MAP ?= maps/hard/01_maze_nightmare.txt
+MAP ?= maps/challenger/01_the_impossible_dream.txt
 
 # maps/easy/01_linear_path.txt
 # maps/medium/02_circular_loop.txt
