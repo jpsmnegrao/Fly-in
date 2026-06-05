@@ -54,7 +54,7 @@ class ParserReturn:
             y = int(zone_values[3])
         except ValueError:
             raise ValueError("Invalid cordinates given!")
-        color = "none"
+        color = "white"
         max_drones = 1
         zone_type = "normal"
         if "[" in line:

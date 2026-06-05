@@ -37,7 +37,7 @@ hub: maze_loop6 6 1 [zone=restricted color=brown]
 # === LAYER 2: The Capacity Nightmare ===
 hub: micro_gate1 7 0 [color=orange max_drones=1]
 hub: micro_gate2 8 0 [color=orange max_drones=1]
-hub: micro_gate3 9 0 [color=orange max_drones=1]
+hub: micro_gate3 9 0 [color=orange zone=blocked max_drones=1]
 
 # Overflow areas with terrible costs
 hub: overflow_hell1 7 1 [zone=restricted color=maroon max_drones=2]
@@ -85,7 +85,7 @@ hub: final_torture4 20 0 [color=crimson max_drones=1]
 hub: final_torture5 21 0 [color=crimson max_drones=1]
 
 # The ultimate goal
-end_hub: impossible_goal 23 0 [color=rainbow max_drones=25]
+end_hub: impossible_goal 23 0 [max_drones=25]
 
 # === CONNECTIONS: The Web of Suffering ===
 

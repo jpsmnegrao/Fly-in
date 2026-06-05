@@ -2,20 +2,26 @@ VENV := venv
 PYTHON := $(VENV)/bin/python3
 PIP := $(VENV)/bin/pip
 MAIN := main.py
-MAP ?= maps/medium/02_circular_loop.txt
+MAP ?= maps/hard/01_maze_nightmare.txt
 
 # maps/easy/01_linear_path.txt
 # maps/medium/02_circular_loop.txt
 # maps/hard/01_maze_nightmare.txt
+# maps/challenger/01_the_impossible_dream.txt
 
 .PHONY: install run debug clean lint lint-strict
 
 all: install
 
 install:
-	python3 -m venv $(VENV)
-	$(PIP) install --upgrade pip
-	$(PIP) install -r requirements.txt
+	@if [ -d "$(VENV)" ]; then \
+		echo "Already installed. Run 'make clean' to reinstall."; \
+	else \
+		python3 -m venv $(VENV); \
+		$(PIP) install --upgrade pip; \
+		$(PIP) install -r requirements.txt; \
+		echo "Installation complete!"; \
+	fi
 
 run:
 	$(VENV)/bin/python $(MAIN) $(MAP)

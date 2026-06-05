@@ -17,13 +17,13 @@ class MapRenderer():
         self.max_y = 0
         self.min_x = 0
         self.min_y = 0
-        self.zone_radius = 20
-        self.scale_factor = 80
-        self.setup_map()
+        self.scale_factor: float = 80.0
+        self.zone_radius = max(5, int(self.scale_factor * 0.3))
         # map area and dimension offsets
         self.map_x = 95
         self.map_y = 60
         self.map_size = 610
+        self.setup_map()
 
     def setup_map(self) -> None:
         """mambo"""
@@ -37,15 +37,43 @@ class MapRenderer():
         """jambo"""
         for zone in self.map_data.zones:
             position = self.zone_position(zone)
-            pygame.draw.circle(
-                self.screen, zone.color, position, self.zone_radius)
+            x, y = position
+            r = self.zone_radius
+            if zone.zone_type == "normal":
+                pygame.draw.circle(
+                    self.screen, zone.color, position, self.zone_radius)
+                pygame.draw.circle(
+                    self.screen, "black", position, self.zone_radius, 3)
+            if zone.zone_type == "blocked":
+                pygame.draw.line(
+                    self.screen, zone.color, (x-r, y-r), (x+r, y+r), 10)
+                pygame.draw.line(
+                    self.screen, zone.color, (x+r, y-r), (x-r, y+r), 10)
+            if zone.zone_type == "restricted":
+                pygame.draw.polygon(self.screen, zone.color, [
+                    (x, y-r), (x+r, y), (x, y+r), (x-r, y)]
+                )
+            if zone.zone_type == "priority":
+                points = [
+                    (x, y-r),
+                    (x+r//4, y-r//4),
+                    (x+r, y-r//4),
+                    (x+r//2, y+r//4),
+                    (x+3*r//4, y+r),
+                    (x, y+r//2),
+                    (x-3*r//4, y+r),
+                    (x-r//2, y+r//4),
+                    (x-r, y-r//4),
+                    (x-r//4, y-r//4),
+                ]
+                pygame.draw.polygon(self.screen, zone.color, points)
 
     def draw_connections(self) -> None:
         """mambo"""
         for connection in self.map_data.connections:
             start = self.zone_position(self.zone_dict[connection.zone_a])
             end = self.zone_position(self.zone_dict[connection.zone_b])
-            pygame.draw.aaline(self.screen, "black", start, end, 5)
+            pygame.draw.line(self.screen, "black", start, end, 3)
 
     def zone_position(self, zone: Zone) -> tuple[int, int]:
         """jambo"""

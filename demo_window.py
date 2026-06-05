@@ -61,6 +61,8 @@ class DemoWindow():
                         self.running = False
                     if event.key == pygame.K_2 or event.key == pygame.K_KP2:
                         self.running_animation = True
+                        self.frame_timer = 0
+                        self.frame_direction = 1
                     if event.key == pygame.K_0 or event.key == pygame.K_KP0:
                         self.x = 95 + 10
                         self.current_frame = 0
