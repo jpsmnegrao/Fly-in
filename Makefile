@@ -16,16 +16,15 @@ install:
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
-# 	$(PIP) install .
 
 run:
 	$(VENV)/bin/python $(MAIN) $(MAP)
 
 debug:
-	$(PYTHON) -m pdb $(MAIN)
+	$(PYTHON) -m pdb $(MAIN) $(MAP)
 
 clean:
-	rm -rf $(VENV) build dist *.egg-info .mypy_cache
+	rm -rf $(VENV) .mypy_cache .pytest_cache/
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 lint:
