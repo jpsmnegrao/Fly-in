@@ -131,7 +131,8 @@ class ParserReturn:
         return Connection(
             zone_a=zone_a,
             zone_b=zone_b,
-            max_capacity=max_capacity
+            max_capacity=max_capacity,
+            drone_count=0
         )
 
     def parser(self) -> MapData:

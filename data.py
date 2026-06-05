@@ -24,6 +24,7 @@ class Connection:
     zone_a: str
     zone_b: str
     max_capacity: int
+    drone_count: int
 
 
 @dataclass

@@ -87,6 +87,14 @@ class MapRenderer():
                     (x-r//4, y-r//4),
                 ]
                 pygame.draw.polygon(self.screen, zone.color, points)
+            font_size = max(10, self.zone_radius)
+            font = pygame.font.SysFont(None, font_size)
+            text = str(zone.drone_count)
+            main = font.render(text, True, "white")
+            shadow = font.render(text, True, "black")
+            text_rect = main.get_rect(center=(x, y))
+            self.screen.blit(shadow, (text_rect.x + 1, text_rect.y + 1))
+            self.screen.blit(main, text_rect)
 
     def draw_connections(self) -> None:
         """mambo"""
@@ -101,6 +109,14 @@ class MapRenderer():
             rect.center = ((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
             pygame.draw.rect(self.screen, "white", rect)
             pygame.draw.rect(self.screen, "black", rect, 2)
+            font_size = max(10, self.zone_radius // 2)
+            font = pygame.font.SysFont(None, font_size)
+            text = str(connection.drone_count)
+            main = font.render(text, True, "white")
+            shadow = font.render(text, True, "black")
+            text_rect = main.get_rect(center=rect.center)
+            self.screen.blit(shadow, (text_rect.x + 1, text_rect.y + 1))
+            self.screen.blit(main, text_rect)
 
     def zone_position(self, zone: Zone) -> tuple[int, int]:
         """jambo"""

@@ -21,6 +21,10 @@ class DemoWindow():
         self.screen = pygame.display.set_mode((1600, 800))
         self.clock = pygame.time.Clock()
         self.map_renderer = MapRenderer(map_data, self.screen)
+        self.start_zone = next(
+           z for z in self.map_data.zones if z.hub_type == "start"
+        )
+        self.start_pos = self.map_renderer.zone_position(self.start_zone)
         # states
         self.running = True
         self.running_animation = False
@@ -44,11 +48,8 @@ class DemoWindow():
         self.frame_timer = 0
         self.frame_direction = 1
         self.speed: float = 590 / 5000
-        self.x: float = self.map_data.map_x + 10
-        self.y: float = (
-            self.map_data.map_y + self.map_data.map_height // 2
-            - self.frame_height // 2
-        )
+        self.x = float(self.start_pos[0] - self.walk.get_width() // 2)
+        self.y = float(self.start_pos[1] - self.frame_height // 2)
 
     def run_renderer(self) -> None:
         while self.running:
@@ -63,7 +64,10 @@ class DemoWindow():
                         self.frame_timer = 0
                         self.frame_direction = 1
                     if event.key == pygame.K_0 or event.key == pygame.K_KP0:
-                        self.x = self.map_data.map_x + 10
+                        self.x = float(
+                            self.start_pos[0] - self.walk.get_width() // 2)
+                        self.y = float(
+                            self.start_pos[1] - self.frame_height // 2)
                         self.current_frame = 0
                         self.frame_timer = 0
                         self.running_animation = False
