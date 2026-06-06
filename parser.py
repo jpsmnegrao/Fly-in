@@ -177,6 +177,14 @@ class ParserReturn:
                 if not any(zone.hub_type == "end" for zone in
                            map_config.zones):
                     raise ValueError("No end zone was provided!")
+                zone_names = {zone.name for zone in map_config.zones}
+                for connection in map_config.connections:
+                    if connection.zone_a not in zone_names or \
+                            connection.zone_b not in zone_names:
+                        raise ValueError(
+                            f"Invalid connection: {connection.zone_a}-"
+                            f"{connection.zone_b}"
+                        )
         except FileNotFoundError:
             raise ValueError(f"Map file '{self.filename}' not found!")
         except PermissionError:

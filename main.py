@@ -14,7 +14,7 @@ def main() -> None:
         map_parser = ParserReturn(sys.argv[1])
         map_data = map_parser.parser()
         window = DemoWindow(map_data)
-        window.run_renderer()
+        window.run()
     except ValueError as error:
         print(error)
 
