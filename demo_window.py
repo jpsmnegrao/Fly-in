@@ -148,10 +148,11 @@ class DemoWindow():
         font = pygame.font.SysFont(None, 20)
         lines = [
             "SIMULATION:",
+            "",
             "State: ",
             f"Number of drones: {self.map_data.nb_drones}",
-            "Stat 2: ",
-            "Stat 3: ",
+            "Total drone moves: ",
+            "Turn: ",
             "Stat 4: "
         ]
         x = rect.x + 10
@@ -173,24 +174,26 @@ class DemoWindow():
             lines = ["Click on a zone or connection node"]
         elif isinstance(self.selected_object, Zone):
             lines = [
-                f"ZONE: {self.selected_object.name}",
+                "ZONE:",
                 "",
+                f"Name: {self.selected_object.name}",
                 f"Type: {self.selected_object.zone_type}",
-                f"Drones: {self.selected_object.drone_count}",
-                f"Max: {self.selected_object.max_drones}",
+                f"Current drones: {self.selected_object.drone_count}",
+                f"Max capacity: {self.selected_object.max_drones}",
             ]
         elif isinstance(self.selected_object, Connection):
             c = self.selected_object
             lines = [
-                f"CONNECTION: {c.zone_a}-{c.zone_b}",
+                "CONNECTION:",
                 "",
+                f"Source: {c.zone_a}",
+                f"Destination: {c.zone_b}",
                 f"Drones: {c.drone_count}",
-                f"Max: {c.max_capacity}",
+                f"Max capacity: {c.max_capacity}",
             ]
         for i, line in enumerate(lines):
             text = font.render(line, True, "white")
-            self.screen.blit(
-                text, text.get_rect(topleft=(x, y + i * line_height)))
+            self.screen.blit(text, (x, y + i * line_height))
 
     def draw_help_panel(self) -> None:
         """jambo"""
@@ -203,16 +206,15 @@ class DemoWindow():
             "ESC / Q: quit window",
             "",
             "INTERACTIONS:",
-            "Click zone or connection to",
-            "see their relevant information"
+            "Click on a zone or connection to",
+            "see their information"
         ]
         x = rect.x + 10
         y = rect.y + 10
         line_height = font.get_linesize()
         for i, line in enumerate(lines):
             text = font.render(line, True, "white")
-            self.screen.blit(
-                text, text.get_rect(topleft=(x, y + i * line_height)))
+            self.screen.blit(text, (x, y + i * line_height))
 
     def update_animation(self, dt: int) -> None:
         """jambo"""
