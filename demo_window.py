@@ -136,7 +136,7 @@ class DemoWindow():
         self.screen.blit(current_sprite, (self.x, self.y), frame_area)
         pygame.display.flip()
 
-    def draw_info_panel(self):
+    def draw_info_panel(self) -> None:
         """mambo"""
         self.draw_simulation_panel()
         self.draw_selection_panel()

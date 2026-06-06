@@ -187,6 +187,18 @@ class TestZoneParserErrors:
             capture_output=True, text=True)
         assert "Traceback" not in result.stderr
 
+    def test_multiple_starts(self) -> None:
+        """Test that multiple start hubs raise ValueError."""
+        p = ParserReturn(f"{INVALID_MAPS_DIR}/multiple_starts.txt")
+        with pytest.raises(ValueError, match="Multiple start zones"):
+            p.parser()
+
+    def test_multiple_ends(self) -> None:
+        """Test that multiple end hubs raise ValueError."""
+        p = ParserReturn(f"{INVALID_MAPS_DIR}/multiple_ends.txt")
+        with pytest.raises(ValueError, match="Multiple end zones"):
+            p.parser()
+
 
 class TestConnectionParserErrors:
     """Tests for invalid connection definitions."""

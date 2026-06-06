@@ -1,3 +1,6 @@
-nb_drones: 2
-end_hub: goal 1 0 [color=red]
-connection: start-goal
+nb_drones: 5
+
+hub a 0 0
+end_hub goal 1 0
+
+connection a-goal

@@ -39,7 +39,7 @@ clean:
 	else \
 		rm -rf $(VENV) .mypy_cache .pytest_cache/ ; \
 		find . -type d -name "__pycache__" -exec rm -rf {} + ; \
-		echo "Cleanup completed!"; \
+		echo "Cleanup complete!"; \
 	fi
 
 lint:

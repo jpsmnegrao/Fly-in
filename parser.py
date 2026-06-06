@@ -171,12 +171,16 @@ class ParserReturn:
                     raise ValueError("No zones were provided!")
                 if len(map_config.connections) == 0:
                     raise ValueError("No connections were provided!")
-                if not any(zone.hub_type == "start" for zone in
-                           map_config.zones):
+                starts = [z for z in map_config.zones if z.hub_type == "start"]
+                ends = [z for z in map_config.zones if z.hub_type == "end"]
+                if len(starts) == 0:
                     raise ValueError("No start zone was provided!")
-                if not any(zone.hub_type == "end" for zone in
-                           map_config.zones):
+                if len(starts) > 1:
+                    raise ValueError("Multiple start zones were provided!")
+                if len(ends) == 0:
                     raise ValueError("No end zone was provided!")
+                if len(ends) > 1:
+                    raise ValueError("Multiple end zones were provided!")
                 zone_names = {zone.name for zone in map_config.zones}
                 for connection in map_config.connections:
                     if connection.zone_a not in zone_names or \
