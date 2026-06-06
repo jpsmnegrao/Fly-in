@@ -88,6 +88,38 @@ class DemoWindow():
                         self.running_animation = False
                 elif event.key == pygame.K_0 or event.key == pygame.K_KP0:
                     self.reset_animation()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mx, my = event.pos
+                self.handle_click(mx, my)
+
+    def handle_click(self, mx: int, my: int) -> None:
+        """mambo"""
+        for zone in self.map_data.zones:
+            x, y = self.map_renderer.zone_position(zone)
+            r = self.map_renderer.zone_radius
+
+            dx = mx - x
+            dy = my - y
+
+            if dx * dx + dy * dy <= r * r:
+                self.selected_object = zone
+                return
+        for connection in self.map_data.connections:
+            start = self.map_renderer.zone_position(
+                self.map_renderer.zone_dict[connection.zone_a]
+            )
+            end = self.map_renderer.zone_position(
+                self.map_renderer.zone_dict[connection.zone_b]
+            )
+            rect = pygame.Rect(
+                0, 0,
+                max(1, self.map_renderer.zone_radius),
+                max(1, self.map_renderer.zone_radius // 2)
+            )
+            rect.center = ((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
+            if rect.collidepoint(mx, my):
+                self.selected_object = connection
+                return
 
     def draw(self) -> None:
         """jambo"""
@@ -130,13 +162,35 @@ class DemoWindow():
             self.screen.blit(
                 text, text.get_rect(topleft=(x, y + i * line_height)))
 
-    # def draw_selection_panel(self) -> None:
-    #     if isinstance(self.selected_object, Zone):
-    #         self.draw_zone_panel(self.selected_object)
-    #     elif isinstance(self.selected_object, Connection):
-    #         self.draw_connection_panel(self.selected_object)
-    #     else:
-    #         self.draw_default_panel()
+    def draw_selection_panel(self) -> None:
+        """jambo"""
+        rect = self.bottomc_panel
+        font = pygame.font.SysFont(None, 20)
+        x = rect.x + 10
+        y = rect.y + 10
+        line_height = font.get_linesize()
+        if self.selected_object is None:
+            lines = ["Click on a zone or connection node"]
+        elif isinstance(self.selected_object, Zone):
+            lines = [
+                f"ZONE: {self.selected_object.name}",
+                "",
+                f"Type: {self.selected_object.zone_type}",
+                f"Drones: {self.selected_object.drone_count}",
+                f"Max: {self.selected_object.max_drones}",
+            ]
+        elif isinstance(self.selected_object, Connection):
+            c = self.selected_object
+            lines = [
+                f"CONNECTION: {c.zone_a}-{c.zone_b}",
+                "",
+                f"Drones: {c.drone_count}",
+                f"Max: {c.max_capacity}",
+            ]
+        for i, line in enumerate(lines):
+            text = font.render(line, True, "white")
+            self.screen.blit(
+                text, text.get_rect(topleft=(x, y + i * line_height)))
 
     def draw_help_panel(self) -> None:
         """jambo"""
