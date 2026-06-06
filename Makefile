@@ -15,7 +15,7 @@ all: install
 
 install:
 	@if [ -d "$(VENV)" ]; then \
-		echo "Already installed. Run 'make clean' to reinstall."; \
+		echo "Already installed. Run 'make clean' and 'make install' to reinstall."; \
 	else \
 		python3 -m venv $(VENV); \
 		$(PIP) install --upgrade pip; \
@@ -24,14 +24,23 @@ install:
 	fi
 
 run:
-	$(VENV)/bin/python $(MAIN) $(MAP)
+	@if [ ! -d "$(VENV)" ]; then \
+		echo "Not installed yet. Run 'make install' to setup the project."; \
+	else \
+		$(VENV)/bin/python $(MAIN) $(MAP); \
+	fi
 
 debug:
 	$(PYTHON) -m pdb $(MAIN) $(MAP)
 
 clean:
-	rm -rf $(VENV) .mypy_cache .pytest_cache/
-	find . -type d -name "__pycache__" -exec rm -rf {} +
+	@if [ ! -d "$(VENV)" ]; then \
+		echo "Nothing to clean. Run 'make install' to setup the project."; \
+	else \
+		rm -rf $(VENV) .mypy_cache .pytest_cache/ ; \
+		find . -type d -name "__pycache__" -exec rm -rf {} + ; \
+		echo "Cleanup completed!"; \
+	fi
 
 lint:
 	$(VENV)/bin/flake8 .
