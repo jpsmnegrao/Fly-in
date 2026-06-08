@@ -165,8 +165,10 @@ class ParserReturn:
                     elif line.startswith("connection"):
                         map_config.connections.append(
                             self.connection_parser(line))
-                if map_config.nb_drones == 0:
+                if map_config.nb_drones is None:
                     raise ValueError("No number of drones was indicated!")
+                if map_config.nb_drones <= 0:
+                    raise ValueError("Number of drones must be positive!")
                 if len(map_config.zones) == 0:
                     raise ValueError("No zones were provided!")
                 if len(map_config.connections) == 0:
@@ -182,6 +184,8 @@ class ParserReturn:
                 if len(ends) > 1:
                     raise ValueError("Multiple end zones were provided!")
                 zone_names = {zone.name for zone in map_config.zones}
+                if len(map_config.zones) > len(zone_names):
+                    raise ValueError("There are duplicate zone names!")
                 for connection in map_config.connections:
                     if connection.zone_a not in zone_names or \
                             connection.zone_b not in zone_names:

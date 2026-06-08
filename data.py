@@ -30,7 +30,7 @@ class Connection:
 @dataclass
 class MapData:
     """jambo"""
-    nb_drones: int = 0
+    nb_drones: int | None = None
     zones: list[Zone] = field(default_factory=list)
     connections: list[Connection] = field(default_factory=list)
     map_x: int = 95
