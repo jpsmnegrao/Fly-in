@@ -26,7 +26,7 @@ class ParserReturn:
         """
         self.filename = filename
 
-    def zone_parser(self, line: str, hub_type: str) -> Zone:
+    def zone_parser(self, line: str, hub_type: str, line_num: int) -> Zone:
         """Parse a single zone line into a Zone object.
 
         Args:
@@ -43,17 +43,19 @@ class ParserReturn:
         """
         zone_values: list[str] = line.split(" ")
         if len(zone_values) < 4:
-            raise ValueError("Missing fields for zone!")
+            raise ValueError(f"Line {line_num}: Missing fields for zone!")
         name = zone_values[1].strip()
         if not name:
-            raise ValueError("Zone name is empty!")
+            raise ValueError(f"Line {line_num}: Zone name is empty!")
         if "-" in name:
-            raise ValueError("Zone name invalid, contains '-'")
+            raise ValueError(
+                f"Line {line_num}: Invalid zone name '{name}' (contains '-')!")
         try:
             x = int(zone_values[2])
             y = int(zone_values[3])
         except ValueError:
-            raise ValueError("Invalid cordinates given!")
+            raise ValueError(
+                f"Line {line_num}: Invalid coordinates for zone '{name}'!")
         color = "white"
         max_drones = 1
         zone_type = "normal"
@@ -68,14 +70,16 @@ class ParserReturn:
                         try:
                             max_drones = int(value.strip().strip("[]"))
                         except ValueError:
-                            raise ValueError("Max drones number is not a valid"
-                                             "integer!")
+                            raise ValueError(
+                                f"Line {line_num}: Invalid max_drones for zone"
+                                f" '{name}'")
                     elif key == "zone" and hub_type not in ("start", "end"):
                         zone_type = value.strip()
                         if zone_type not in ("normal", "blocked", "restricted",
                                              "priority"):
-                            raise ValueError("Invalid zone type: "
-                                             f"'{zone_type}'")
+                            raise ValueError(
+                                f"Line {line_num}: Invalid zone type "
+                                f"'{zone_type}' in zone '{name}'")
         return Zone(
             hub_type=hub_type,
             name=name,
@@ -87,7 +91,7 @@ class ParserReturn:
             drone_count=0
         )
 
-    def connection_parser(self, line: str) -> Connection:
+    def connection_parser(self, line: str, line_num: int) -> Connection:
         """Parse a single connection line into a Connection object.
 
         Args:
@@ -102,15 +106,18 @@ class ParserReturn:
         """
         connection_values = line.split(" ")
         if len(connection_values) < 2:
-            raise ValueError("Missing fields for connection!")
+            raise ValueError(
+                f"Line {line_num}: Missing fields for connection!")
         try:
             zone_a: str = connection_values[1].split("-")[0]
             zone_b: str = connection_values[1].split("-")[1].strip()
         except IndexError:
-            raise ValueError("Connection has incorrect format "
-                             "(<name1>-<name2>)")
+            raise ValueError(f"Line {line_num}: Connection has incorrect "
+                             "format (<name1>-<name2>)")
         if not zone_a or not zone_b:
-            raise ValueError("One of the zone names is missing!")
+            raise ValueError(
+                f"Line {line_num}: Invalid connection '{zone_a}-{zone_b}' "
+                "(missing zone name)!")
         max_capacity: int = 1
         if "[" in line:
             metadata = " ".join(connection_values[2:]).strip("[]")
@@ -122,12 +129,12 @@ class ParserReturn:
                             max_capacity = int(value.strip().strip("[]"))
                         except ValueError:
                             raise ValueError(
-                                "Max drone capacity for connection must be an "
-                                "integer!")
+                                f"Line {line_num}: Invalid max_link_capacity "
+                                f"for connection '{zone_a}-{zone_b}'!")
                         if max_capacity < 1:
                             raise ValueError(
-                                "Max drone capacity for connection must be a "
-                                "positive integer!")
+                                f"Line {line_num}: Invalid max_link_capacity "
+                                f"for connection '{zone_a}-{zone_b}'!")
         return Connection(
             zone_a=zone_a,
             zone_b=zone_b,
@@ -148,7 +155,10 @@ class ParserReturn:
         map_config = MapData()
         try:
             with open(self.filename, 'r') as configs:
+                existing_connections = set()
+                line_num = 0
                 for line in configs:
+                    line_num += 1
                     if not line.strip() or line.startswith("#"):
                         continue
                     if line.startswith("nb_drones"):
@@ -157,14 +167,24 @@ class ParserReturn:
                         map_config.nb_drones = int(value)
                     elif line.startswith("start_hub"):
                         map_config.zones.append(self.zone_parser(line,
-                                                "start"))
+                                                "start", line_num))
                     elif line.startswith("end_hub"):
-                        map_config.zones.append(self.zone_parser(line, "end"))
+                        map_config.zones.append(self.zone_parser(line,
+                                                "end", line_num))
                     elif line.startswith("hub"):
-                        map_config.zones.append(self.zone_parser(line, "hub"))
+                        map_config.zones.append(self.zone_parser(line, "hub",
+                                                line_num))
                     elif line.startswith("connection"):
-                        map_config.connections.append(
-                            self.connection_parser(line))
+                        connection = self.connection_parser(line, line_num)
+                        a = connection.zone_a
+                        b = connection.zone_b
+                        key = tuple(sorted((a, b)))
+                        if key in existing_connections:
+                            raise ValueError(
+                                f"Line {line_num}: Duplicate connection "
+                                f"{a}-{b}")
+                        existing_connections.add(key)
+                        map_config.connections.append(connection)
                 if map_config.nb_drones is None:
                     raise ValueError("No number of drones was indicated!")
                 if map_config.nb_drones <= 0:

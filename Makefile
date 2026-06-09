@@ -9,14 +9,6 @@ MAIN := main.py
 MAP ?= maps/hard/01_maze_nightmare.txt
 # MAP ?= maps/challenger/01_the_impossible_dream.txt
 
-ISSUES TO FIX IN PARSER
-
-Duplicate connections (A–B vs B–A)
-Duplicate connections (exact repeats)
-Line numbers in error messages (if required strictly)
-(Optional) enforce “previously defined zones only” rule strictl
-
-
 .PHONY: install run debug clean lint lint-strict
 
 all: install
