@@ -44,4 +44,7 @@ class Drone:
     """jambo"""
     id: str
     current_zone: str
-    state: bool
+    finished: bool = False
+    in_transit: bool
+    destination_zone: str | None = None
+    remaining_turns: int = 0
