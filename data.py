@@ -37,3 +37,11 @@ class MapData:
     map_y: int = 60
     map_width: int = 1400
     map_height: int = 610
+
+
+@dataclass
+class Drone:
+    """jambo"""
+    id: str
+    current_zone: str
+    state: bool
