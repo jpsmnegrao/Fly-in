@@ -25,6 +25,7 @@ class Connection:
     zone_b: str
     max_capacity: int
     drone_count: int
+    name: str
 
 
 @dataclass
@@ -43,8 +44,18 @@ class MapData:
 class Drone:
     """jambo"""
     id: str
-    current_zone: str
+    current_zone: str = ""
     finished: bool = False
-    in_transit: bool
-    destination_zone: str | None = None
+    in_transit: bool = False
+    destination_zone: str = ""
     remaining_turns: int = 0
+
+
+@dataclass
+class Move:
+    """mambo"""
+    drone_id: str
+    target: str
+    target_zone: str | None
+    target_connection: str | None
+    in_transit: bool

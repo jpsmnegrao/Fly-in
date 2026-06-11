@@ -139,7 +139,8 @@ class ParserReturn:
             zone_a=zone_a,
             zone_b=zone_b,
             max_capacity=max_capacity,
-            drone_count=0
+            drone_count=0,
+            name=f"{zone_a}-{zone_b}"
         )
 
     def parser(self) -> MapData:

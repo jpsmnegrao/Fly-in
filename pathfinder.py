@@ -35,15 +35,15 @@ class NavGraph:
                 self.distances[zone.name] = 0
             else:
                 self.distances[zone.name] = float('inf')
-        queue = []
+        queue: list[tuple[float, str]] = []
         heapq.heappush(queue, (0, goal_name))
         visited = set()
         while queue:
-            dist, zone = heapq.heappop(queue)
+            dist, current = heapq.heappop(queue)
             if zone in visited:
                 continue
             visited.add(zone)
-            for connection in self.adjacency.get(zone, []):
+            for connection in self.adjacency.get(current, []):
                 prev = connection.zone_a
                 zone_type = self.zones_by_names[prev].zone_type
                 if zone_type == "blocked":
@@ -56,13 +56,13 @@ class NavGraph:
                     new_dist = dist + 1
                 if new_dist < self.distances[prev]:
                     self.distances[prev] = new_dist
-                    self.next_move[prev] = zone
+                    self.next_move[prev] = current
                     heapq.heappush(queue, (new_dist, prev))
 
     def get_path(self, start: str) -> list[str]:
         """jambo"""
         path = []
-        current = start
+        current: str | None = start
         while current is not None:
             path.append(current)
             current = self.next_move.get(current)

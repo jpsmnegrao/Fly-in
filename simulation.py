@@ -19,14 +19,14 @@ class Simulation:
             zone for zone in map_data.zones if zone.hub_type == "start")
         self.end_zone: Zone = next(
             zone for zone in map_data.zones if zone.hub_type == "end")
-        self.drone_count: int = map_data.nb_drones
+        self.drone_count: int = map_data.nb_drones  # type: ignore[assignment]
         self.drones: list[Drone] = [
             Drone(
                 id=f"D{i + 1}",
                 current_zone=self.start_zone.name,
                 finished=False,
                 in_transit=False,
-                destination_zone=None,
+                destination_zone="",
                 remaining_turns=0
             )
             for i in range(self.drone_count)
@@ -38,7 +38,7 @@ class Simulation:
         for drone in self.drones:
             if drone.finished:
                 continue
-            next_zone = self.nav_graph.next_move[drone.current_zone]
+            next_zone: str = self.nav_graph.next_move[drone.current_zone]
             zone = self.nav_graph.zones_by_names[next_zone]
             connection = next(
                 c for c in self.nav_graph.adjacency[drone.current_zone]
@@ -57,3 +57,15 @@ class Simulation:
                 old_zone.drone_count -= 1
                 new_zone.drone_count += 1
                 drone.current_zone = next_zone
+
+    def handle_transit(self) -> None:
+        """jambo"""
+        for drone in self.drones:
+            if drone.in_transit:
+                drone.remaining_turns -= 1
+                if drone.remaining_turns > 0:
+                    continue
+                drone.in_transit = False
+                drone.current_zone = drone.destination_zone
+                if drone.destination_zone == self.end_zone.name:
+                    drone.finished = True
