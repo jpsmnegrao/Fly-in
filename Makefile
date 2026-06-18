@@ -6,8 +6,8 @@ MAIN := main.py
 
 # MAP ?= maps/easy/01_linear_path.txt
 # MAP ?= maps/medium/02_circular_loop.txt
-MAP ?= maps/hard/01_maze_nightmare.txt
-# MAP ?= maps/challenger/01_the_impossible_dream.txt
+# MAP ?= maps/hard/01_maze_nightmare.txt
+MAP ?= maps/challenger/01_the_impossible_dream.txt
 
 .PHONY: install run debug clean lint lint-strict
 

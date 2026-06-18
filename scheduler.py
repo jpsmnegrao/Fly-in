@@ -77,21 +77,20 @@ class Scheduler:
                         )
                     proposed_moves.append(move)
         target_count: dict[str, int] = {}
-        allowed_zones: dict[str, bool] = {}
+        approved_count: dict[str, int] = {}
         for move in proposed_moves:
             target_count[move.target] = target_count.get(move.target, 0) + 1
         for move in proposed_moves:
             zone = self.zones_by_name[move.target]
-            if zone.drone_count >= zone.max_drones:
-                continue
-            if target_count[move.target] > 1:
-                if allowed_zones.get(move.target, False):
-                    continue
-                allowed_zones[move.target] = True
-            valid_moves.append(move)
+            if zone.drone_count + approved_count.get(move.target, 0) \
+                    < zone.max_drones:
+                approved_count[move.target] = (
+                    approved_count.get(move.target, 0) + 1)
+                valid_moves.append(move)
         for move in valid_moves:
             drone = self.drones_by_id[move.drone_id]
             zone = self.zones_by_name[move.target]
+            self.zones_by_name[drone.current_zone].drone_count -= 1
             drone.current_zone = move.target
             zone.drone_count += 1
         return valid_moves
