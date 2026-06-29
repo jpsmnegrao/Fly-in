@@ -1,4 +1,7 @@
-"""mambo jambo.
+"""Pygame-based interactive demo window for the Fly-In simulation.
+
+Renders the map, zones, and connections, and provides a placeholder
+walking-sprite animation and click-to-inspect UI for zones/connections.
 """
 
 
@@ -11,7 +14,12 @@ class DemoWindow():
     """mambo"""
 
     def __init__(self, map_data: MapData) -> None:
-        """jambo"""
+        """Interactive pygame window for map and demo animation visualization.
+
+        Handles window setup, user input (clicks and key presses), rendering
+        of the map/zones/connections, an info panel, and a placeholder sprite
+        animation used to preview movement along the map area.
+        """
         # pygame initialization
         pygame.init()
         pygame.font.init()
@@ -64,6 +72,11 @@ class DemoWindow():
         self.y = float(self.start_pos[1] - self.frame_height // 2)
 
     def run(self) -> None:
+        """Run the main loop: handle input, update animation, draw, repeat.
+
+        Loops at 60 FPS until the window is closed or the user quits, then
+        shuts down pygame.
+        """
         while self.running:
             self.handle_events()
             dt = self.clock.tick(60)
@@ -72,7 +85,12 @@ class DemoWindow():
         pygame.quit()
 
     def handle_events(self) -> None:
-        """jambo"""
+        """Process pygame events: quit, key presses, and mouse clicks.
+
+        Handles window close, Q/ESC to quit, SPACE to start/pause the
+        placeholder animation, 0 to reset it, and left-click to select a zone
+        or connection.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -93,7 +111,16 @@ class DemoWindow():
                 self.handle_click(mx, my)
 
     def handle_click(self, mx: int, my: int) -> None:
-        """mambo"""
+        """Select the zone or connection under the given click position.
+
+        Checks zones first (circular hit area), then connections (rectangular
+        hit area centered on the connection's midpoint). Sets
+        self.selected_object to the first match found, if any.
+
+        Args:
+            mx: X coordinate of the click, in screen pixels.
+            my: Y coordinate of the click, in screen pixels.
+        """
         for zone in self.map_data.zones:
             x, y = self.map_renderer.zone_position(zone)
             r = self.map_renderer.zone_radius
@@ -122,7 +149,11 @@ class DemoWindow():
                 return
 
     def draw(self) -> None:
-        """jambo"""
+        """Render one full frame: background, map, panels, and sprite.
+
+        Clears the screen, draws the title, map area, connections, zones, info
+        panels, and the current animation frame, then flips the display buffer.
+        """
         self.screen.fill("black")
         self.screen.blit(self.title, self.title_pos)
         pygame.draw.rect(self.screen, "gray", self.map_area)
@@ -137,13 +168,19 @@ class DemoWindow():
         pygame.display.flip()
 
     def draw_info_panel(self) -> None:
-        """mambo"""
+        """Draw all three bottom info panels: simulation, selection, help."""
         self.draw_simulation_panel()
         self.draw_selection_panel()
         self.draw_help_panel()
 
     def draw_simulation_panel(self) -> None:
-        """mambo"""
+        """Draw the bottom-left panel showing simulation status.
+
+        Note:
+            "Total drone moves", "Turn", and "Stat 4" are placeholder labels
+            with no value rendered yet. TODO: wire these up once simulation
+            state is tracked/exposed here.
+        """
         rect = self.bottoml_panel
         font = pygame.font.SysFont(None, 20)
         lines = [
@@ -164,7 +201,9 @@ class DemoWindow():
                 text, text.get_rect(topleft=(x, y + i * line_height)))
 
     def draw_selection_panel(self) -> None:
-        """jambo"""
+        """Draw the bottom-center panel showing the currently selected zone or
+        connection's details, or a prompt if nothing is selected.
+        """
         rect = self.bottomc_panel
         font = pygame.font.SysFont(None, 20)
         x = rect.x + 10
@@ -196,7 +235,9 @@ class DemoWindow():
             self.screen.blit(text, (x, y + i * line_height))
 
     def draw_help_panel(self) -> None:
-        """jambo"""
+        """Draw the bottom-right panel showing keyboard controls and
+        interaction hints.
+        """
         rect = self.bottomr_panel
         font = pygame.font.SysFont(None, 20)
         lines = [
@@ -217,7 +258,17 @@ class DemoWindow():
             self.screen.blit(text, (x, y + i * line_height))
 
     def update_animation(self, dt: int) -> None:
-        """jambo"""
+        """Advance the placeholder walking animation by one frame step.
+
+        Args:
+            dt: Milliseconds elapsed since the last frame, used to time frame
+                advancement and horizontal movement.
+
+        Note:
+            This animates a single sprite walking left-to-right across the map
+            area; it is not yet driven by actual drone positions or simulation
+            state. TODO: replace with real drone rendering.
+        """
         if self.running_animation:
             self.frame_timer += dt
             if self.frame_timer > 100:
@@ -233,7 +284,9 @@ class DemoWindow():
                 self.running_animation = False
 
     def reset_animation(self) -> None:
-        """jambo"""
+        """Reset the placeholder animation to its starting position and frame,
+        and stop it if running.
+        """
         self.x = float(
             self.start_pos[0] - self.walk.get_width() // 2)
         self.y = float(

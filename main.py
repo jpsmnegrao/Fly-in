@@ -1,4 +1,8 @@
-"""mambo jambo."""
+"""Entry point for the Fly-In drone routing simulation.
+
+Parses a map file given on the command line, builds the navigation graph, and
+launches the demo window.
+"""
 
 from parser import ParserReturn
 from pathfinder import NavGraph
@@ -7,7 +11,12 @@ import sys
 
 
 def main() -> None:
-    """jambo"""
+    """Parse the map file from argv, build the nav graph, and run the demo.
+
+    Expects exactly one command-line argument: the path to a map configuration
+    file. On any parsing error (invalid map, missing file, etc.), prints the
+    error message and exits without crashing.
+    """
     if len(sys.argv) < 2:
         print("Usage: python3 main.py <map_file>")
         sys.exit(1)

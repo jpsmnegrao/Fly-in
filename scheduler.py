@@ -7,12 +7,24 @@ from pathfinder import NavGraph
 
 
 class Scheduler:
-    """mambo"""
+    """Computes per-turn drone movement proposals and resolves conflicts.
+
+    Given the current state of all drones and the map's navigation graph, the
+    Scheduler determines each drone's next move, filters out moves that would
+    violate zone capacity, and commits the approved moves by updating drone
+    and zone state.
+    """
 
     def __init__(
         self, map_data: MapData, nav_graph: NavGraph, drones: list[Drone]
     ) -> None:
-        """mambo"""
+        """Initialize the scheduler with map state and drone references.
+
+        Args:
+            map_data: Parsed map configuration (zones and connections).
+            nav_graph: Navigation graph used to compute paths between zones.
+            drones: List of drones being managed by this scheduler.
+        """
         self.map_data = map_data
         self.nav_graph = nav_graph
         self.drones = drones
@@ -26,7 +38,12 @@ class Scheduler:
             {drone.id: drone for drone in drones})
 
     def get_paths(self) -> None:
-        """jambo"""
+        """Compute and cache a path for each drone that hasn't finished.
+
+        Populates self.paths with a mapping of drone id to the list of zone
+        names from the drone's current zone to the end zone, as returned by
+        the navigation graph. Finished drones are skipped.
+        """
         for drone in self.drones:
             if drone.finished:
                 continue
@@ -37,7 +54,31 @@ class Scheduler:
     def step(
         self, map_data: MapData, nav_graph: NavGraph, drones: list[Drone]
     ) -> list[Move]:
-        """jambo"""
+        """Propose, resolve, and commit one turn of drone movement.
+
+        For each unfinished drone with a remaining path, builds a
+        proposed Move toward its next zone. Proposed moves are then
+        filtered against zone capacity (max_drones), approving moves
+        only while the zone has remaining room this turn. Approved
+        moves are committed: the drone's current_zone is updated, the
+        origin zone's drone_count is decremented, and the destination
+        zone's drone_count is incremented.
+
+        Note:
+            The in_transit / restricted-zone branch below is currently
+            unreachable, since no code path sets drone.in_transit to
+            True yet. TODO: wire this up once transit state is set on
+            commit.
+
+        Args:
+            map_data: Unused; shadows self.map_data. TODO: remove parameter.
+            nav_graph: Unused; shadows self.nav_graph. TODO: remove parameter.
+            drones: Unused; shadows self.drones. TODO: remove parameter.
+
+        Returns:
+            The list of Move objects that were approved and committed
+            this turn.
+        """
         self.get_paths()
         proposed_moves: list[Move] = []
         valid_moves: list[Move] = []

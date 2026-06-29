@@ -1,4 +1,8 @@
-"""mambo jambo.
+"""Renders the map (zones and connections) onto a pygame surface.
+
+Computes a scale factor and centering offset from zone coordinates so the map
+fits within a fixed-size drawing area, then draws zones (shaped by zone_type)
+and connections (with live drone counts) each frame.
 """
 
 
@@ -7,10 +11,22 @@ from data import MapData, Zone
 
 
 class MapRenderer():
-    """mambo"""
+    """Draws zones and connections for a parsed map onto a pygame surface.
+
+    Converts zone (x, y) coordinates from the map file into screen coordinates,
+    scaled and centered to fit within the configured map drawing area, and
+    renders each zone/connection with a shape and drone-count label
+    appropriate to its type.
+    """
 
     def __init__(self, map_data: MapData, screen: pygame.Surface) -> None:
-        """jambo"""
+        """Set up layout state and compute the initial scale/centering.
+
+        Args:
+            map_data: Parsed map configuration (zones, connections, and
+                layout dimensions) to render.
+            screen: The pygame surface to draw onto.
+        """
         self.map_data = map_data
         self.screen = screen
         self.map_x = self.map_data.map_x
@@ -26,7 +42,15 @@ class MapRenderer():
         self.coords_center_y = (self.min_y + self.max_y) / 2
 
     def setup_map(self) -> None:
-        """mambo"""
+        """Compute coordinate bounds, scale factor, and zone radius.
+
+        Finds the min/max zone coordinates to determine the map's
+        coordinate-space bounding box, then derives a scale factor so that box
+        fits within the drawing area (map_width/height minus an 80px margin),
+        capped at 150. Falls back to a fixed scale of 100.0 if all zones share
+        the same x and y (zero range). Also builds zone_dict for fast zone
+        lookup by name.
+        """
         self.max_x = max(zone.x for zone in self.map_data.zones)
         self.max_y = max(zone.y for zone in self.map_data.zones)
         self.min_x = min(zone.x for zone in self.map_data.zones)
@@ -49,7 +73,13 @@ class MapRenderer():
         self.zone_radius = max(5, int(self.scale_factor * 0.3))
 
     def draw_zones(self) -> None:
-        """jambo"""
+        """Draw every zone with a shape based on its zone_type.
+
+        normal zones are drawn as filled circles, blocked as an X, restricted
+        as a diamond, and priority as a star-like polygon. Each zone is
+        labeled with its current drone_count, rendered with a black shadow for
+        readability.
+        """
         for zone in self.map_data.zones:
             position = self.zone_position(zone)
             x, y = position
@@ -95,7 +125,12 @@ class MapRenderer():
             self.screen.blit(main, text_rect)
 
     def draw_connections(self) -> None:
-        """mambo"""
+        """Draw every connection as a line with a drone-count label.
+
+        Each connection is drawn as a black line between its two zones, with a
+        small white rect at the midpoint showing the current drone_count
+        traversing it.
+        """
         for connection in self.map_data.connections:
             start = self.zone_position(self.zone_dict[connection.zone_a])
             end = self.zone_position(self.zone_dict[connection.zone_b])
@@ -114,7 +149,16 @@ class MapRenderer():
 
     def connection_mid_rect(
             self, start: tuple[int, int], end: tuple[int, int]) -> pygame.Rect:
-        """jambo"""
+        """Build the small label rectangle centered on a connection's midpoint.
+
+        Args:
+            start: Screen position of the connection's origin zone.
+            end: Screen position of the connection's destination zone.
+
+        Returns:
+            A pygame.Rect sized relative to zone_radius, centered on the
+            midpoint between start and end.
+        """
         rect = pygame.Rect(
             0, 0, max(1, self.zone_radius), max(1, self.zone_radius // 2)
         )
@@ -122,7 +166,15 @@ class MapRenderer():
         return rect
 
     def zone_position(self, zone: Zone) -> tuple[int, int]:
-        """jambo"""
+        """Convert a zone's map coordinates into screen coordinates.
+
+        Args:
+            zone: The zone whose position to convert.
+
+        Returns:
+            The (x, y) screen position, centered and scaled according to
+            coords_center_x/y and scale_factor.
+        """
         screen_center_x = self.map_x + self.map_width / 2
         screen_center_y = self.map_y + self.map_height / 2
         screen_x = (
