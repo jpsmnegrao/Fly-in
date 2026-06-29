@@ -1,4 +1,5 @@
-"""mambo jambo.
+"""Computes per-turn drone movement proposals and resolves conflicts against
+zone capacity.
 """
 
 
@@ -51,29 +52,22 @@ class Scheduler:
             path = self.nav_graph.get_path(start)
             self.paths[drone.id] = path
 
-    def step(
-        self, map_data: MapData, nav_graph: NavGraph, drones: list[Drone]
-    ) -> list[Move]:
+    def step(self) -> list[Move]:
         """Propose, resolve, and commit one turn of drone movement.
 
-        For each unfinished drone with a remaining path, builds a
-        proposed Move toward its next zone. Proposed moves are then
-        filtered against zone capacity (max_drones), approving moves
-        only while the zone has remaining room this turn. Approved
-        moves are committed: the drone's current_zone is updated, the
-        origin zone's drone_count is decremented, and the destination
-        zone's drone_count is incremented.
+        For each unfinished drone with a remaining path, builds a proposed
+        Move toward its next zone. Proposed moves are then filtered against
+        zone capacity (max_drones), approving moves only while the zone has
+        remaining room this turn. Approved moves are committed: the drone's
+        current_zone is updated, the origin zone's drone_count is decremented,
+        and the destination zone's drone_count is incremented.
 
         Note:
-            The in_transit / restricted-zone branch below is currently
-            unreachable, since no code path sets drone.in_transit to
-            True yet. TODO: wire this up once transit state is set on
-            commit.
-
-        Args:
-            map_data: Unused; shadows self.map_data. TODO: remove parameter.
-            nav_graph: Unused; shadows self.nav_graph. TODO: remove parameter.
-            drones: Unused; shadows self.drones. TODO: remove parameter.
+            The in_transit / restricted-zone branch below builds a Move with
+            in_transit=True, but nothing yet commits that back onto
+            drone.in_transit or drone.destination_zone, so a drone never
+            actually enters the transit state via this method. TODO: wire this
+            up on commit.
 
         Returns:
             The list of Move objects that were approved and committed
@@ -117,10 +111,7 @@ class Scheduler:
                             in_transit=False
                         )
                     proposed_moves.append(move)
-        target_count: dict[str, int] = {}
         approved_count: dict[str, int] = {}
-        for move in proposed_moves:
-            target_count[move.target] = target_count.get(move.target, 0) + 1
         for move in proposed_moves:
             zone = self.zones_by_name[move.target]
             if zone.drone_count + approved_count.get(move.target, 0) \
