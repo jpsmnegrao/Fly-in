@@ -52,77 +52,69 @@ class Scheduler:
             path = self.nav_graph.get_path(start)
             self.paths[drone.id] = path
 
-    def step(self) -> list[Move]:
-        """Propose, resolve, and commit one turn of drone movement.
-
-        For each unfinished drone with a remaining path, builds a proposed
-        Move toward its next zone. Proposed moves are then filtered against
-        zone capacity (max_drones), approving moves only while the zone has
-        remaining room this turn. Approved moves are committed: the drone's
-        current_zone is updated, the origin zone's drone_count is decremented,
-        and the destination zone's drone_count is incremented.
-
-        Note:
-            The in_transit / restricted-zone branch below builds a Move with
-            in_transit=True, but nothing yet commits that back onto
-            drone.in_transit or drone.destination_zone, so a drone never
-            actually enters the transit state via this method. TODO: wire this
-            up on commit.
-
-        Returns:
-            The list of Move objects that were approved and committed
-            this turn.
-        """
+    def run_turn(self) -> list[Move]:
+        """Propose, filter, and commit one turn of drone movement."""
         self.get_paths()
+        moves: list[Move] = self.propose_moves()
+        valid: list[Move] = self.filter_valid_moves(moves)
+        self.commit_moves(valid)
+        return valid
+
+    def propose_moves(self) -> list[Move]:
+        """Propose the next move for all unfinished drones."""
         proposed_moves: list[Move] = []
-        valid_moves: list[Move] = []
         for drone in self.drones:
-            if not drone.finished:
-                path = self.paths[drone.id]
+            if drone.finished:
+                continue
+            if drone.in_transit:
+                proposed_moves.append(Move(
+                    drone_id=drone.id,
+                    target=drone.destination_zone,
+                    target_zone=drone.destination_zone,
+                    target_connection=None,
+                    in_transit=True
+                ))
+            else:
+                path = self.paths.get(drone.id, [])
                 if len(path) >= 2:
-                    if drone.in_transit:
-                        drone.remaining_turns -= 1
-                        if drone.remaining_turns > 0:
-                            next_zone = drone.destination_zone
-                            move = Move(
-                                drone_id=drone.id,
-                                target=next_zone,
-                                target_zone=next_zone,
-                                target_connection=f"{drone.current_zone}-"
-                                                  f"{next_zone}",
-                                in_transit=True
-                            )
-                        else:
-                            next_zone = path[1]
-                            move = Move(
-                                 drone_id=drone.id,
-                                 target=next_zone,
-                                 target_zone=next_zone,
-                                 target_connection=None,
-                                 in_transit=False
-                             )
-                    else:
-                        next_zone = path[1]
-                        move = Move(
-                            drone_id=drone.id,
-                            target=next_zone,
-                            target_zone=next_zone,
-                            target_connection=None,
-                            in_transit=False
-                        )
-                    proposed_moves.append(move)
+                    proposed_moves.append(Move(
+                        drone_id=drone.id,
+                        target=path[1],
+                        target_zone=path[1],
+                        target_connection=None,
+                        in_transit=False
+                    ))
+        return proposed_moves
+
+    def filter_valid_moves(self, proposed_moves: list[Move]) -> list[Move]:
+        """Filter proposed moves against zone capacity."""
+        valid: list[Move] = []
         approved_count: dict[str, int] = {}
         for move in proposed_moves:
-            zone = self.zones_by_name[move.target]
-            if zone.drone_count + approved_count.get(move.target, 0) \
-                    < zone.max_drones:
-                approved_count[move.target] = (
-                    approved_count.get(move.target, 0) + 1)
-                valid_moves.append(move)
-        for move in valid_moves:
+            zone: Zone = self.zones_by_name[move.target]
+            if (
+                    zone.drone_count + approved_count.get(move.target, 0)
+                    < zone.max_drones):
+                approved_count[move.target] = approved_count.get(
+                    move.target, 0) + 1
+                valid.append(move)
+        return valid
+
+    def commit_moves(self, moves: list[Move]) -> None:
+        """Updates drone and zone state based on approved moves."""
+        for move in moves:
             drone = self.drones_by_id[move.drone_id]
-            zone = self.zones_by_name[move.target]
-            self.zones_by_name[drone.current_zone].drone_count -= 1
-            drone.current_zone = move.target
-            zone.drone_count += 1
-        return valid_moves
+            origin = self.zones_by_name[drone.current_zone]
+            destination = self.zones_by_name[move.target]
+            if not move.in_transit:
+                if destination.zone_type == "restricted":
+                    drone.in_transit = True
+                    drone.destination_zone = move.target
+                    drone.remaining_turns = 1
+                    origin.drone_count -= 1
+                else:
+                    drone.current_zone = move.target
+                    origin.drone_count -= 1
+                    destination.drone_count += 1
+                    if drone.current_zone == self.end_zone:
+                        drone.finished = True

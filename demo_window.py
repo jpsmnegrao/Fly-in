@@ -8,12 +8,13 @@ walking-sprite animation and click-to-inspect UI for zones/connections.
 import pygame
 from data import MapData, Zone, Connection
 from map_renderer import MapRenderer
+from simulation import Simulation
 
 
 class DemoWindow():
     """mambo"""
 
-    def __init__(self, map_data: MapData) -> None:
+    def __init__(self, map_data: MapData, simulation: Simulation) -> None:
         """Interactive pygame window for map and demo animation visualization.
 
         Handles window setup, user input (clicks and key presses), rendering
@@ -29,6 +30,8 @@ class DemoWindow():
         self.clock = pygame.time.Clock()
         # Data
         self.map_data = map_data
+        self.simulation = simulation
+        self.last_step_time = 0
         self.start_zone = next(
            z for z in self.map_data.zones if z.hub_type == "start"
         )
@@ -80,6 +83,11 @@ class DemoWindow():
         while self.running:
             self.handle_events()
             dt = self.clock.tick(60)
+            self.last_step_time += dt
+            if (self.running_animation and not self.simulation.paused
+                    and self.last_step_time > 1000):
+                self.simulation.step()
+                self.last_step_time = 0
             self.update_animation(dt)
             self.draw()
         pygame.quit()
@@ -149,10 +157,11 @@ class DemoWindow():
                 return
 
     def draw(self) -> None:
-        """Render one full frame: background, map, panels, and sprite.
+        """Render one full frame: background, map, panels, and drone sprites.
 
         Clears the screen, draws the title, map area, connections, zones, info
-        panels, and the current animation frame, then flips the display buffer.
+        panels, and now iterates through active drones to render their current
+        positions.
         """
         self.screen.fill("black")
         self.screen.blit(self.title, self.title_pos)
@@ -160,11 +169,20 @@ class DemoWindow():
         self.map_renderer.draw_connections()
         self.map_renderer.draw_zones()
         self.draw_info_panel()
-        current_sprite = self.walk
-        frame_area = pygame.Rect(
-            0, self.current_frame * self.frame_height,
-            current_sprite.get_width(), self.frame_height)
-        self.screen.blit(current_sprite, (self.x, self.y), frame_area)
+        for drone in self.simulation.drones:
+            if drone.finished:
+                continue
+            zone = next(
+                z for z in self.map_data.zones if z.name
+                == drone.current_zone)
+            pos = self.map_renderer.zone_position(zone)
+            current_sprite = self.walk
+            frame_area = pygame.Rect(
+                0, self.current_frame * self.frame_height,
+                current_sprite.get_width(), self.frame_height)
+            self.screen.blit(
+                current_sprite, (pos[0] - current_sprite.get_width() // 2,
+                                 pos[1] - self.frame_height // 2), frame_area)
         pygame.display.flip()
 
     def draw_info_panel(self) -> None:
@@ -185,12 +203,11 @@ class DemoWindow():
         font = pygame.font.SysFont(None, 20)
         lines = [
             "SIMULATION:",
-            "",
-            "State: ",
+            f"State: {'Paused' if self.simulation.paused else 'Running'}",
             f"Number of drones: {self.map_data.nb_drones}",
-            "Total drone moves: ",
-            "Turn: ",
-            "Stat 4: "
+            f"Finished: {sum(1 for d in self.simulation.drones
+                             if d.finished)}",
+            f"Turn: {self.simulation.turn}",
         ]
         x = rect.x + 10
         y = rect.y + 10

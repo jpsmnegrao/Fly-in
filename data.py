@@ -14,9 +14,10 @@ class Zone:
         name: Unique identifier for the zone.
         x: X coordinate, used for rendering.
         y: Y coordinate, used for rendering.
-        zone_type: Movement category - 'normal', 'blocked', 'restricted', or
-            'priority'. Determines turn cost to enter (1, inaccessible, 2, and
-            1-but-preferred respectively).
+        zone_type: Movement category determining how the zone is traversed:
+        'normal': costs 1 turn to enter; 'restricted': costs 2 turns;
+        'priority': costs 1 turn, preferred by the pathfinder over normal
+        zones; 'blocked': cannot be entered.
         color: Display color, used for rendering.
         max_drones: Maximum number of drones allowed in this zone at once.
         drone_count: Current number of drones occupying this zone.

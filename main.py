@@ -7,6 +7,7 @@ launches the demo window.
 from parser import ParserReturn
 from pathfinder import NavGraph
 from demo_window import DemoWindow
+from simulation import Simulation
 import sys
 
 
@@ -15,7 +16,7 @@ def main() -> None:
 
     Expects exactly one command-line argument: the path to a map configuration
     file. On any parsing error (invalid map, missing file, etc.), prints the
-    error message and exits without crashing.
+    error message and exits gracefully.
     """
     if len(sys.argv) < 2:
         print("Usage: python3 main.py <map_file>")
@@ -26,7 +27,9 @@ def main() -> None:
         nav_graph = NavGraph(map_data)
         nav_graph.build_zone_lookup()
         nav_graph.build_adjacency()
-        window = DemoWindow(map_data)
+        nav_graph.reverse_dijkstra()
+        simulation = Simulation(map_data, nav_graph)
+        window = DemoWindow(map_data, simulation)
         window.run()
     except ValueError as error:
         print(error)

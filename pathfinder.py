@@ -1,10 +1,11 @@
 """Builds a navigation graph from map data and computes shortest paths to the
 end zone using a reverse Dijkstra search.
 
-Distances and next-hop moves are computed once from every zone toward the end
-zone, accounting for per-zone-type movement costs (normal=1, priority=1,
-restricted=2, blocked=inaccessible). Paths for individual drones are then read
-off the resulting next_move table.
+The graph is treated as bidirectional, with distances and next-hop moves
+computed once from every zone toward the end zone. Movement costs are
+determined by the zone_type (normal/priority=1, restricted=2,
+blocked=inaccessible). Paths for individual drones are derived from this
+shared table.
 """
 
 
@@ -39,20 +40,18 @@ class NavGraph:
         """Build a name-to-Zone lookup dict from map_data.zones."""
         self.zones_by_names = {zone.name: zone for zone in self.map_data.zones}
 
-    def build_adjacency(self):
-        """Build a reverse adjacency dict keyed by destination zone.
+    def build_adjacency(self) -> None:
+        """Build an adjacency dict registering each connection in both
+        directions.
 
-        For each connection, registers it under its zone_b, so that
-        self.adjacency[zone_b] lists all connections arriving at zone_b. Used
-        by reverse_dijkstra to walk backward from the end zone toward every
-        other zone.
-
-        Note:
-            Connections are one-directional in this structure (only indexed by
-            zone_b). TODO: confirm this is intentional given connections may
-            need to be traversable in both directions.
+        For each connection, registers it under both zone_a and zone_b,
+        ensuring that the graph can be traversed bidirectionally during
+        pathfinding.
         """
         for connection in self.map_data.connections:
+            if connection.zone_a not in self.adjacency:
+                self.adjacency[connection.zone_a] = []
+            self.adjacency[connection.zone_a].append(connection)
             if connection.zone_b not in self.adjacency:
                 self.adjacency[connection.zone_b] = []
             self.adjacency[connection.zone_b].append(connection)
@@ -61,19 +60,11 @@ class NavGraph:
         """Compute shortest distance and next-hop move from every zone to the
         end zone, using a reverse Dijkstra search.
 
-        Starts from the zone with hub_type 'end' at distance 0, then walks
-        backward via self.adjacency (which is keyed by destination zone),
-        accumulating movement cost based on the zone_type of the zone being
-        entered (normal/priority=1, restricted=2, blocked=skipped entirely).
-        Populates self.distances and self.next_move for every reachable zone.
-
-        Note:
-            TODO: bug - the visited-check and visited.add calls use a variable
-            named `zone`, which is never assigned anywhere in this method (the
-            loop variable holding the popped node is `current`). This will
-            raise a NameError on first use, or reference an unrelated `zone`
-            from an enclosing scope if one exists. Should be `current` in both
-            places.
+        Starts from the zone with hub_type 'end' at distance 0, then explores
+        outward via self.adjacency, accumulating movement cost based on the
+        zone_type of the zone being entered (normal/priority=1, restricted=2,
+        blocked=skipped entirely). Populates self.distances and self.next_move
+        for every reachable zone.
         """
         for zone in self.map_data.zones:
             if zone.hub_type == "end":
@@ -86,9 +77,9 @@ class NavGraph:
         visited = set()
         while queue:
             dist, current = heapq.heappop(queue)
-            if zone in visited:
+            if current in visited:
                 continue
-            visited.add(zone)
+            visited.add(current)
             for connection in self.adjacency.get(current, []):
                 prev = connection.zone_a
                 zone_type = self.zones_by_names[prev].zone_type

@@ -47,6 +47,9 @@ class ParserReturn:
         name = zone_values[1].strip()
         if not name:
             raise ValueError(f"Line {line_num}: Zone name is empty!")
+        if " " in name:
+            raise ValueError(
+                f"Line {line_num}: Zone name '{name}' cannot contain spaces!")
         if "-" in name:
             raise ValueError(
                 f"Line {line_num}: Invalid zone name '{name}' (contains '-')!")
@@ -204,7 +207,7 @@ class ParserReturn:
                     raise ValueError("No end zone was provided!")
                 if len(ends) > 1:
                     raise ValueError("Multiple end zones were provided!")
-                zone_names = {zone.name for zone in map_config.zones}
+                zone_names: set[str] = {zone.name for zone in map_config.zones}
                 if len(map_config.zones) > len(zone_names):
                     raise ValueError("There are duplicate zone names!")
                 for connection in map_config.connections:

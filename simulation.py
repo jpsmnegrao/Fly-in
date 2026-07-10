@@ -52,20 +52,19 @@ class Simulation:
         """
         self.turn += 1
         self.handle_transit()
-        self.scheduler.step()
+        active_drones: list[Drone] = [
+            d for d in self.drones if not d.finished and not d.in_transit]
+        if active_drones:
+            self.scheduler.run_turn()
 
     def handle_transit(self) -> None:
-        """Advance drones currently in transit on a multi-turn (restricted)
-        connection, and mark drones finished on arrival at the end zone.
+        """Advance drones currently in transit and process arrivals.
 
-        For each drone with in_transit set, decrements remaining_turns; once
-        it reaches 0, moves the drone to its destination_zone, clears
-        in_transit, and marks the drone finished if it arrived at the end zone.
-
-        Note:
-            TODO: drone.in_transit is never actually set to True anywhere
-            (scheduler.py only sets it on the Move object, not on the Drone
-            itself), so this method's main branch is presently unreachable.
+        For each drone currently in transit, this method decrements its
+        remaining_turns. Once a drone reaches 0 turns, it is moved to its
+        destination zone, the transit state is cleared, and the zone's drone
+        count is updated. If the destination is the end zone, the drone is
+        marked as finished.
         """
         for drone in self.drones:
             if drone.in_transit:
@@ -74,5 +73,9 @@ class Simulation:
                     continue
                 drone.in_transit = False
                 drone.current_zone = drone.destination_zone
+                target_zone: Zone = next(
+                    z for z in self.map_data.zones if z.name ==
+                    drone.current_zone)
+                target_zone.drone_count += 1
                 if drone.destination_zone == self.end_zone.name:
                     drone.finished = True
