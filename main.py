@@ -21,18 +21,21 @@ def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: python3 main.py <map_file>")
         sys.exit(1)
-    try:
-        map_parser = ParserReturn(sys.argv[1])
-        map_data = map_parser.parser()
-        nav_graph = NavGraph(map_data)
-        nav_graph.build_zone_lookup()
-        nav_graph.build_adjacency()
-        nav_graph.reverse_dijkstra()
-        simulation = Simulation(map_data, nav_graph)
-        window = DemoWindow(map_data, simulation)
-        window.run()
-    except ValueError as error:
-        print(error)
+    while True:
+        try:
+            map_parser = ParserReturn(sys.argv[1])
+            map_data = map_parser.parser()
+            nav_graph = NavGraph(map_data)
+            nav_graph.build_zone_lookup()
+            nav_graph.build_adjacency()
+            nav_graph.reverse_dijkstra()
+            simulation = Simulation(map_data, nav_graph)
+            window = DemoWindow(map_data, simulation)
+            if not window.run():
+                break
+        except ValueError as error:
+            print(error)
+            break
 
 
 if __name__ == "__main__":

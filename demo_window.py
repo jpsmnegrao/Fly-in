@@ -76,6 +76,9 @@ class DemoWindow():
             for d in simulation.drones
         }
         # Animation state
+        self.auto_play: bool = True
+        self.step_requested: bool = False
+        self.reset_requested: bool = False
         self.frame_height = self.walk.get_height() // 15
         self.current_frame = 0
         self.frame_timer = 0
@@ -84,7 +87,7 @@ class DemoWindow():
         self.x = float(self.start_pos[0] - self.walk.get_width() // 2)
         self.y = float(self.start_pos[1] - self.frame_height // 2)
 
-    def run(self) -> None:
+    def run(self) -> bool:
         """Run the main loop: handle input, update animation, draw, repeat.
 
         Loops at 60 FPS until the window is closed or the user quits, then
@@ -95,7 +98,13 @@ class DemoWindow():
             self.handle_events()
             dt = self.clock.tick(60)
             self.last_step_time += dt
-            if (self.running_animation and self.last_step_time > 1000):
+            should_step = (
+                (self.auto_play and self.running_animation and
+                 self.last_step_time > 1000) or (not self.auto_play and
+                                                 self.step_requested)
+            )
+            if should_step:
+                self.step_requested = False
                 pre_positions = {
                     d.id: self.map_renderer.zone_position(
                         self.map_renderer.zone_dict[d.current_zone])
@@ -133,6 +142,7 @@ class DemoWindow():
             self.update_animation(dt)
             self.draw()
         pygame.quit()
+        return self.reset_requested
 
     def handle_events(self) -> None:
         """Process pygame events: quit, key presses, and mouse clicks.
@@ -147,14 +157,16 @@ class DemoWindow():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
                     self.running = False
+                elif event.key == pygame.K_m:
+                    self.auto_play = not self.auto_play
                 elif event.key == pygame.K_SPACE:
-                    if not self.running_animation:
-                        if not all(d.finished for d in self.simulation.drones):
-                            self.running_animation = True
-                            self.frame_timer = 0
-                            self.frame_direction = 1
+                    if self.auto_play:
+                        self.running_animation = not self.running_animation
                     else:
-                        self.running_animation = False
+                        if all(a["progress"] >= 1.0
+                                for a in self.drone_anim.values()):
+                            self.step_requested = True
+                            self.running_animation = True
                 elif event.key == pygame.K_0 or event.key == pygame.K_KP0:
                     self.reset_animation()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -275,6 +287,7 @@ class DemoWindow():
             f"Finished: {sum(1 for d in self.simulation.drones
                              if d.finished)}",
             f"Turn: {self.simulation.turn}",
+            f"Simulation mode: {'Continuous' if self.auto_play else 'By turn'}"
         ]
         x = rect.x + 10
         y = rect.y + 10
@@ -326,6 +339,7 @@ class DemoWindow():
         font = pygame.font.SysFont(None, 20)
         lines = [
             "CONTROLS:",
+            "M: Simulation playback mode (turn by turn or continuous)",
             "SPACE: start / pause simulation",
             "0: reset animation",
             "ESC / Q: quit window",
@@ -361,15 +375,14 @@ class DemoWindow():
                 if all(a["progress"] >= 1.0 for a in
                         self.drone_anim.values()):
                     self.running_animation = False
+            elif (not self.auto_play and
+                    all(a["progress"] >= 1.0
+                        for a in self.drone_anim.values())):
+                self.running_animation = False
 
     def reset_animation(self) -> None:
         """Reset the placeholder animation to its starting position and frame,
         and stop it if running.
         """
-        self.x = float(
-            self.start_pos[0] - self.walk.get_width() // 2)
-        self.y = float(
-            self.start_pos[1] - self.frame_height // 2)
-        self.current_frame = 0
-        self.frame_timer = 0
-        self.running_animation = False
+        self.reset_requested = True
+        self.running = False

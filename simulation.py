@@ -50,9 +50,6 @@ class Simulation:
         then delegates move proposal/resolution/commit to the scheduler.
         """
         self.turn += 1
-        if self.turn == 1:
-            for drone_id, path in self.scheduler.paths.items():
-                print(f"DEBUG - Path {drone_id}: {path}")
         completed_transit, arriving = self.handle_transit()
         unfinished_drones: list[Drone] = [d for d in self.drones if not
                                           d.finished]
