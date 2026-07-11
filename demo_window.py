@@ -65,6 +65,16 @@ class DemoWindow():
         self.walk_up = pygame.transform.flip(
             pygame.image.load("assets/wwalku.png"), True, False)
         self.walk_up.set_colorkey((128, 128, 192))
+        self.drone_anim: dict[str, dict] = {
+            d.id: {
+                "start_pos": self.map_renderer.zone_position(
+                    self.map_renderer.zone_dict[d.current_zone]),
+                "end_pos": self.map_renderer.zone_position(
+                    self.map_renderer.zone_dict[d.current_zone]),
+                "progress": 1.0
+            }
+            for d in simulation.drones
+        }
         # Animation state
         self.frame_height = self.walk.get_height() // 15
         self.current_frame = 0
@@ -81,12 +91,29 @@ class DemoWindow():
         shuts down pygame.
         """
         while self.running:
+            pygame.event.pump()
             self.handle_events()
             dt = self.clock.tick(60)
             self.last_step_time += dt
-            if (self.running_animation and not self.simulation.paused
-                    and self.last_step_time > 1000):
-                self.simulation.step()
+            if (self.running_animation and self.last_step_time > 1000):
+                pre_positions = {
+                    d.id: self.map_renderer.zone_position(
+                        self.map_renderer.zone_dict[d.current_zone])
+                    for d in self.simulation.drones if not d.finished
+                }
+                completed_transit = self.simulation.step()
+                for drone in self.simulation.drones:
+                    if drone.finished and drone not in completed_transit:
+                        continue
+                    end_pos = self.map_renderer.zone_position(
+                        self.map_renderer.zone_dict[drone.current_zone])
+                    self.drone_anim[drone.id]["start_pos"] = pre_positions.get(
+                        drone.id, end_pos)
+                    self.drone_anim[drone.id]["end_pos"] = end_pos
+                    self.drone_anim[drone.id]["progress"] = 0.0
+                self.last_step_time = 0
+                if all(d.finished for d in self.simulation.drones):
+                    self.running_animation = False
                 self.last_step_time = 0
             self.update_animation(dt)
             self.draw()
@@ -107,9 +134,10 @@ class DemoWindow():
                     self.running = False
                 elif event.key == pygame.K_SPACE:
                     if not self.running_animation:
-                        self.running_animation = True
-                        self.frame_timer = 0
-                        self.frame_direction = 1
+                        if not all(d.finished for d in self.simulation.drones):
+                            self.running_animation = True
+                            self.frame_timer = 0
+                            self.frame_direction = 1
                     else:
                         self.running_animation = False
                 elif event.key == pygame.K_0 or event.key == pygame.K_KP0:
@@ -170,19 +198,36 @@ class DemoWindow():
         self.map_renderer.draw_zones()
         self.draw_info_panel()
         for drone in self.simulation.drones:
-            if drone.finished:
+            anim = self.drone_anim[drone.id]
+            if drone.finished and anim["progress"] >= 1.0:
                 continue
-            zone = next(
-                z for z in self.map_data.zones if z.name
-                == drone.current_zone)
-            pos = self.map_renderer.zone_position(zone)
-            current_sprite = self.walk
+            anim = self.drone_anim[drone.id]
+            t = anim["progress"]
+            sx, sy = anim["start_pos"]
+            ex, ey = anim["end_pos"]
+            x = int(sx + (ex - sx) * t)
+            y = int(sy + (ey - sy) * t)
+            zone = self.map_renderer.zone_dict[drone.current_zone]
+            path = self.simulation.scheduler.paths.get(drone.id, [])
+            if len(path) >= 2:
+                next_zone = self.map_renderer.zone_dict[path[1]]
+                dy = next_zone.y - zone.y
+                if dy < 0:
+                    current_sprite = self.walk_up
+                elif dy > 0:
+                    current_sprite = self.walk_down
+                else:
+                    current_sprite = self.walk
+            else:
+                current_sprite = self.walk
             frame_area = pygame.Rect(
                 0, self.current_frame * self.frame_height,
                 current_sprite.get_width(), self.frame_height)
             self.screen.blit(
-                current_sprite, (pos[0] - current_sprite.get_width() // 2,
-                                 pos[1] - self.frame_height // 2), frame_area)
+                current_sprite,
+                (x - current_sprite.get_width() // 2,
+                 y - self.frame_height // 2),
+                frame_area)
         pygame.display.flip()
 
     def draw_info_panel(self) -> None:
@@ -201,9 +246,16 @@ class DemoWindow():
         """
         rect = self.bottoml_panel
         font = pygame.font.SysFont(None, 20)
+        if all(d.finished for d in self.simulation.drones):
+            state = "Finished"
+        elif not self.running_animation:
+            state = "Paused"
+        else:
+            state = "Running"
         lines = [
             "SIMULATION:",
-            f"State: {'Paused' if self.simulation.paused else 'Running'}",
+            "Map: IMPLEMENT MAP NAME HERE",
+            f"State: {state}",
             f"Number of drones: {self.map_data.nb_drones}",
             f"Finished: {sum(1 for d in self.simulation.drones
                              if d.finished)}",
@@ -275,16 +327,10 @@ class DemoWindow():
             self.screen.blit(text, (x, y + i * line_height))
 
     def update_animation(self, dt: int) -> None:
-        """Advance the placeholder walking animation by one frame step.
+        """Advance the sprite sheet frame for the walking animation.
 
         Args:
-            dt: Milliseconds elapsed since the last frame, used to time frame
-                advancement and horizontal movement.
-
-        Note:
-            This animates a single sprite walking left-to-right across the map
-            area; it is not yet driven by actual drone positions or simulation
-            state. TODO: replace with real drone rendering.
+            dt: Milliseconds elapsed since the last frame.
         """
         if self.running_animation:
             self.frame_timer += dt
@@ -293,12 +339,9 @@ class DemoWindow():
                 if self.current_frame >= 14 or self.current_frame <= 0:
                     self.frame_direction *= -1
                 self.frame_timer = 0
-            self.x += self.speed * dt
-            if self.x > self.map_data.map_x + self.map_data.map_width \
-                    - 110:
-                self.x = (
-                    self.map_data.map_x + self.map_data.map_width - 110)
-                self.running_animation = False
+            for drone_id, anim in self.drone_anim.items():
+                if anim["progress"] < 1.0:
+                    anim["progress"] = min(1.0, anim["progress"] + dt / 1000.0)
 
     def reset_animation(self) -> None:
         """Reset the placeholder animation to its starting position and frame,

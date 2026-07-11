@@ -221,4 +221,11 @@ class ParserReturn:
             raise ValueError(f"Map file '{self.filename}' not found!")
         except PermissionError:
             raise ValueError(f"No permission to open '{self.filename}'")
+        map_config.start_zone = next(
+            z for z in map_config.zones if z.hub_type == "start")
+        map_config.end_zone = next(
+            z for z in map_config.zones if z.hub_type == "end")
+        map_config.start_zone.drone_count = map_config.nb_drones
+        map_config.start_zone.max_drones = map_config.nb_drones
+        map_config.end_zone.max_drones = map_config.nb_drones
         return map_config

@@ -25,7 +25,6 @@ class Simulation:
         self.map_data = map_data
         self.nav_graph = nav_graph
         self.turn: int = 0
-        self.paused: bool = False
         self.start_zone: Zone = next(
             zone for zone in map_data.zones if zone.hub_type == "start")
         self.end_zone: Zone = next(
@@ -44,38 +43,47 @@ class Simulation:
         ]
         self.scheduler = Scheduler(map_data, nav_graph, self.drones)
 
-    def step(self) -> None:
+    def step(self) -> list[Drone]:
         """Advance the simulation by one turn.
 
         Increments self.turn, advances any drones currently in transit,
         then delegates move proposal/resolution/commit to the scheduler.
         """
         self.turn += 1
-        self.handle_transit()
-        active_drones: list[Drone] = [
-            d for d in self.drones if not d.finished and not d.in_transit]
-        if active_drones:
-            self.scheduler.run_turn()
+        if self.turn == 1:
+            for drone_id, path in self.scheduler.paths.items():
+                print(f"DEBUG - Path {drone_id}: {path}")
+        completed_transit = self.handle_transit()
+        unfinished_drones: list[Drone] = [d for d in self.drones if not
+                                          d.finished]
+        if not unfinished_drones:
+            return []
+        self.scheduler.run_turn()
+        return completed_transit
 
-    def handle_transit(self) -> None:
-        """Advance drones currently in transit and process arrivals.
+    def handle_transit(self) -> list[Drone]:
+        """Advance drones currently in transit on a multi-turn (restricted)
+        connection, and mark drones finished on arrival at the end zone.
 
-        For each drone currently in transit, this method decrements its
-        remaining_turns. Once a drone reaches 0 turns, it is moved to its
-        destination zone, the transit state is cleared, and the zone's drone
-        count is updated. If the destination is the end zone, the drone is
-        marked as finished.
+        Decrements remaining_turns for each in-transit drone; once it hits 0,
+        moves the drone to its destination_zone, clears in_transit, and marks
+        the drone finished if it arrived at the end zone.
         """
+        completed: list[Drone] = []
         for drone in self.drones:
             if drone.in_transit:
                 drone.remaining_turns -= 1
                 if drone.remaining_turns > 0:
                     continue
-                drone.in_transit = False
+                origin = self.nav_graph.zones_by_names[drone.current_zone]
+                destination = (
+                    self.nav_graph.zones_by_names[drone.destination_zone])
+                origin.drone_count -= 1
+                destination.drone_count += 1
                 drone.current_zone = drone.destination_zone
-                target_zone: Zone = next(
-                    z for z in self.map_data.zones if z.name ==
-                    drone.current_zone)
-                target_zone.drone_count += 1
-                if drone.destination_zone == self.end_zone.name:
+                drone.destination_zone = ""
+                drone.in_transit = False
+                if drone.current_zone == self.end_zone.name:
                     drone.finished = True
+                completed.append(drone)
+        return completed

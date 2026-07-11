@@ -64,26 +64,17 @@ class Scheduler:
         """Propose the next move for all unfinished drones."""
         proposed_moves: list[Move] = []
         for drone in self.drones:
-            if drone.finished:
+            if drone.finished or drone.in_transit:
                 continue
-            if drone.in_transit:
+            path = self.paths.get(drone.id, [])
+            if len(path) >= 2:
                 proposed_moves.append(Move(
                     drone_id=drone.id,
-                    target=drone.destination_zone,
-                    target_zone=drone.destination_zone,
+                    target=path[1],
+                    target_zone=path[1],
                     target_connection=None,
-                    in_transit=True
+                    in_transit=False
                 ))
-            else:
-                path = self.paths.get(drone.id, [])
-                if len(path) >= 2:
-                    proposed_moves.append(Move(
-                        drone_id=drone.id,
-                        target=path[1],
-                        target_zone=path[1],
-                        target_connection=None,
-                        in_transit=False
-                    ))
         return proposed_moves
 
     def filter_valid_moves(self, proposed_moves: list[Move]) -> list[Move]:
@@ -110,7 +101,7 @@ class Scheduler:
                 if destination.zone_type == "restricted":
                     drone.in_transit = True
                     drone.destination_zone = move.target
-                    drone.remaining_turns = 1
+                    drone.remaining_turns += 2
                     origin.drone_count -= 1
                 else:
                     drone.current_zone = move.target

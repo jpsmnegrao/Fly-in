@@ -70,6 +70,8 @@ class MapData:
     nb_drones: int | None = None
     zones: list[Zone] = field(default_factory=list)
     connections: list[Connection] = field(default_factory=list)
+    start_zone: Zone | None = None
+    end_zone: Zone | None = None
     map_x: int = 95
     map_y: int = 60
     map_width: int = 1400
