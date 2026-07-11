@@ -99,21 +99,36 @@ class DemoWindow():
                 pre_positions = {
                     d.id: self.map_renderer.zone_position(
                         self.map_renderer.zone_dict[d.current_zone])
-                    for d in self.simulation.drones if not d.finished
+                    for d in self.simulation.drones
                 }
-                completed_transit = self.simulation.step()
+                completed_transit, arriving = self.simulation.step()
                 for drone in self.simulation.drones:
-                    if drone.finished and drone not in completed_transit:
-                        continue
                     end_pos = self.map_renderer.zone_position(
                         self.map_renderer.zone_dict[drone.current_zone])
                     self.drone_anim[drone.id]["start_pos"] = pre_positions.get(
                         drone.id, end_pos)
                     self.drone_anim[drone.id]["end_pos"] = end_pos
                     self.drone_anim[drone.id]["progress"] = 0.0
-                self.last_step_time = 0
-                if all(d.finished for d in self.simulation.drones):
-                    self.running_animation = False
+                for drone in self.simulation.drones:
+                    if drone.in_transit and not drone.arriving:
+                        dest_zone = self.map_renderer.zone_dict[
+                            drone.destination_zone]
+                        dest_pos = self.map_renderer.zone_position(dest_zone)
+                        origin_pos = pre_positions.get(drone.id, dest_pos)
+                        mid_x = (origin_pos[0] + dest_pos[0]) // 2
+                        mid_y = (origin_pos[1] + dest_pos[1]) // 2
+                        self.drone_anim[drone.id]["end_pos"] = (mid_x, mid_y)
+                for drone in arriving:
+                    dest_pos = self.map_renderer.zone_position(
+                        self.map_renderer.zone_dict[drone.current_zone])
+                    origin_name = drone.current_connection.split("-")[0]
+                    origin_pos = self.map_renderer.zone_position(
+                        self.map_renderer.zone_dict[origin_name])
+                    mid_x = (origin_pos[0] + dest_pos[0]) // 2
+                    mid_y = (origin_pos[1] + dest_pos[1]) // 2
+                    self.drone_anim[drone.id]["start_pos"] = (mid_x, mid_y)
+                    self.drone_anim[drone.id]["end_pos"] = dest_pos
+                    self.drone_anim[drone.id]["progress"] = 0.0
                 self.last_step_time = 0
             self.update_animation(dt)
             self.draw()
@@ -342,6 +357,10 @@ class DemoWindow():
             for drone_id, anim in self.drone_anim.items():
                 if anim["progress"] < 1.0:
                     anim["progress"] = min(1.0, anim["progress"] + dt / 1000.0)
+            if all(d.finished for d in self.simulation.drones):
+                if all(a["progress"] >= 1.0 for a in
+                        self.drone_anim.values()):
+                    self.running_animation = False
 
     def reset_animation(self) -> None:
         """Reset the placeholder animation to its starting position and frame,

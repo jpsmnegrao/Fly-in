@@ -95,8 +95,10 @@ class Drone:
     """
     id: str
     current_zone: str = ""
+    current_connection = ""
     finished: bool = False
     in_transit: bool = False
+    arriving: bool = False
     destination_zone: str = ""
     remaining_turns: int = 0
 

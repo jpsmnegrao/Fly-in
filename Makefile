@@ -12,7 +12,7 @@ MAIN := main.py
 # 5 <= 6
 # MAP ?= maps/medium/01_dead_end_trap.txt
 # 12 <= 12
-# MAP ?= maps/medium/02_circular_loop.txt
+MAP ?= maps/medium/02_circular_loop.txt
 # 14 <= 15
 # MAP ?= maps/medium/03_priority_puzzle.txt
 # 12 <= 12
@@ -22,7 +22,7 @@ MAIN := main.py
 # 27 <= 35
 # MAP ?= maps/hard/03_ultimate_challenge.txt
 # 40 <= 45
-MAP ?= maps/challenger/01_the_impossible_dream.txt
+# MAP ?= maps/challenger/01_the_impossible_dream.txt
 # 68 <= 45
 
 .PHONY: install run debug clean lint lint-strict
