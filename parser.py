@@ -6,6 +6,7 @@ renderer and pathfinding logic.
 
 
 from data import Zone, Connection, MapData
+import pygame
 
 
 class ParserReturn:
@@ -68,7 +69,13 @@ class ParserReturn:
                 if "=" in item:
                     key, value = item.split("=")
                     if key == "color":
-                        color = value.strip().strip("[]")
+                        requested_color = value.strip().strip("[]")
+
+                        try:
+                            pygame.Color(requested_color)
+                            color = requested_color
+                        except ValueError:
+                            color = "white"
                     elif key == "max_drones":
                         try:
                             max_drones = int(value.strip().strip("[]"))
@@ -169,26 +176,34 @@ class ParserReturn:
                         key_value = line.split(":")
                         value: str = key_value[1].strip()
                         map_config.nb_drones = int(value)
-                    elif line.startswith("start_hub"):
-                        map_config.zones.append(self.zone_parser(line,
-                                                "start", line_num))
-                    elif line.startswith("end_hub"):
-                        map_config.zones.append(self.zone_parser(line,
-                                                "end", line_num))
-                    elif line.startswith("hub"):
-                        map_config.zones.append(self.zone_parser(line, "hub",
-                                                line_num))
-                    elif line.startswith("connection"):
-                        connection = self.connection_parser(line, line_num)
-                        a = connection.zone_a
-                        b = connection.zone_b
-                        key = tuple(sorted((a, b)))
-                        if key in existing_connections:
-                            raise ValueError(
-                                f"Line {line_num}: Duplicate connection "
-                                f"{a}-{b}")
-                        existing_connections.add(key)
-                        map_config.connections.append(connection)
+                    elif (line.startswith("start_hub") or
+                          line.startswith("end_hub") or
+                          line.startswith("hub") or
+                          line.startswith("connection")):
+                        if map_config.nb_drones is None:
+                            raise ValueError(f"Line {line_num}: nb_drones must"
+                                             " be defined before any other map"
+                                             "data!")
+                        elif line.startswith("start_hub"):
+                            map_config.zones.append(self.zone_parser(line,
+                                                    "start", line_num))
+                        elif line.startswith("end_hub"):
+                            map_config.zones.append(self.zone_parser(line,
+                                                    "end", line_num))
+                        elif line.startswith("hub"):
+                            map_config.zones.append(self.zone_parser(line,
+                                                    "hub", line_num))
+                        elif line.startswith("connection"):
+                            connection = self.connection_parser(line, line_num)
+                            a = connection.zone_a
+                            b = connection.zone_b
+                            key = tuple(sorted((a, b)))
+                            if key in existing_connections:
+                                raise ValueError(
+                                    f"Line {line_num}: Duplicate connection "
+                                    f"{a}-{b}")
+                            existing_connections.add(key)
+                            map_config.connections.append(connection)
                 if map_config.nb_drones is None:
                     raise ValueError("No number of drones was indicated!")
                 if map_config.nb_drones <= 0:

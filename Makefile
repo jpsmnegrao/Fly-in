@@ -5,25 +5,25 @@ MAIN := main.py
 # MAP ?= maps/medium/02_circular_loop.txt
 
 # MAP ?= maps/easy/01_linear_path.txt
-# 5 <= 6
+# 4 <= 6
 # MAP ?= maps/easy/02_simple_fork.txt
-# 9 <= 8
+# 4 <= 8
 # MAP ?= maps/easy/03_basic_capacity.txt
-# 5 <= 6
+# 4 <= 6
 # MAP ?= maps/medium/01_dead_end_trap.txt
-# 12 <= 12
+# 8 <= 12
 MAP ?= maps/medium/02_circular_loop.txt
-# 14 <= 15
+# infinite <= 15
 # MAP ?= maps/medium/03_priority_puzzle.txt
-# 12 <= 12
+# 8 <= 12
 # MAP ?= maps/hard/01_maze_nightmare.txt
-# 21 <= 30
+# 14 <= 30
 # MAP ?= maps/hard/02_capacity_hell.txt
-# 27 <= 35
+# 16 <= 35
 # MAP ?= maps/hard/03_ultimate_challenge.txt
-# 40 <= 45
+# 26 <= 45
 # MAP ?= maps/challenger/01_the_impossible_dream.txt
-# 68 <= 45
+# infinite <= 45
 
 .PHONY: install run debug clean lint lint-strict
 

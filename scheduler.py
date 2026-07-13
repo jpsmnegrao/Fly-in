@@ -49,7 +49,17 @@ class Scheduler:
             if drone.finished:
                 continue
             start = drone.current_zone
-            path = self.nav_graph.get_path(start)
+            options = self.nav_graph.get_possible_next_moves(start)
+            if not options:
+                self.paths[drone.id] = [start]
+                continue
+            choice = options[0]
+            if len(options) > 1:
+                index = int(drone.id[1:]) % len(options)
+                choice = options[index]
+            path = [start, choice]
+            remaining = self.nav_graph.get_path(choice)
+            path.extend(remaining[1:])
             self.paths[drone.id] = path
 
     def run_turn(self) -> list[Move]:
@@ -78,16 +88,31 @@ class Scheduler:
         return proposed_moves
 
     def filter_valid_moves(self, proposed_moves: list[Move]) -> list[Move]:
-        """Filter proposed moves against zone capacity."""
+        """Filter proposed moves against zone capacity.
+
+        Important:
+        A zone becomes available when a drone leaves it in the same turn.
+        Therefore, we first calculate departures, then validate arrivals.
+        """
+        temp_occupancy: dict[str, int] = {
+            zone.name: zone.drone_count for zone in
+            self.zones_by_name.values()}
+        leaving: dict[str, int] = {}
+        for move in proposed_moves:
+            drone = self.drones_by_id[move.drone_id]
+            origin = drone.current_zone
+            leaving[origin] = leaving.get(origin, 0) + 1
+        effective_occupancy: dict[str, int] = temp_occupancy.copy()
+        for zone_name, count in leaving.items():
+            effective_occupancy[zone_name] -= count
         valid: list[Move] = []
         approved_count: dict[str, int] = {}
         for move in proposed_moves:
-            zone: Zone = self.zones_by_name[move.target]
-            if (
-                    zone.drone_count + approved_count.get(move.target, 0)
-                    < zone.max_drones):
-                approved_count[move.target] = approved_count.get(
-                    move.target, 0) + 1
+            zone = self.zones_by_name[move.target]
+            incoming = approved_count.get(move.target, 0)
+            current = effective_occupancy.get(move.target, 0)
+            if current + incoming < zone.max_drones:
+                approved_count[move.target] = incoming + 1
                 valid.append(move)
         return valid
 

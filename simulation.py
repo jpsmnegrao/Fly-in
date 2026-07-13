@@ -55,16 +55,15 @@ class Simulation:
                                           d.finished]
         if not unfinished_drones:
             return [], []
-        valid_moves = self.scheduler.run_turn()
+        self.scheduler.run_turn()
         output: list[str] = []
-        for drone in completed_transit:
-            output.append(f"{drone.id}-{drone.current_zone}")
-        for move in valid_moves:
-            drone = self.scheduler.drones_by_id[move.drone_id]
+        for drone in self.drones:
+            if drone.finished:
+                continue
             if drone.in_transit:
                 output.append(f"{drone.id}-{drone.current_connection}")
             else:
-                output.append(f"{drone.id}-{move.target}")
+                output.append(f"{drone.id}-{drone.current_zone}")
         if output:
             print(" ".join(output))
         return completed_transit, arriving

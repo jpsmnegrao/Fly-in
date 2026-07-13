@@ -341,7 +341,7 @@ class DemoWindow():
             "CONTROLS:",
             "M: Simulation playback mode (turn by turn or continuous)",
             "SPACE: start / pause simulation",
-            "0: reset animation",
+            "0: reset simulation (relaunches pygame)",
             "ESC / Q: quit window",
             "",
             "INTERACTIONS:",

@@ -117,3 +117,23 @@ class NavGraph:
             path.append(current)
             current = self.next_move.get(current)
         return path
+
+    def get_possible_next_moves(self, zone_name: str) -> list[str]:
+        """mambo jambo"""
+        possible_moves: list[str] = []
+        current_distance = self.distances[zone_name]
+        for connection in self.adjacency.get(zone_name, []):
+            if connection.zone_a == zone_name:
+                neighbour = connection.zone_b
+            else:
+                neighbour = connection.zone_a
+            if neighbour not in self.distances:
+                continue
+            zone = self.zones_by_names[zone_name]
+            if zone.zone_type == "restricted":
+                cost = 2
+            else:
+                cost = 1
+            if self.distances[neighbour] + cost == current_distance:
+                possible_moves.append(neighbour)
+        return possible_moves
