@@ -55,17 +55,36 @@ class Simulation:
                                           d.finished]
         if not unfinished_drones:
             return [], []
-        self.scheduler.run_turn()
+        valid_moves = self.scheduler.run_turn()
         output: list[str] = []
-        for drone in self.drones:
-            if drone.finished:
+        printed: set[str] = set()
+        for drone in completed_transit:
+            output.append(f"{drone.id}-{drone.current_zone}")
+            printed.add(drone.id)
+        for move in valid_moves:
+            drone = self.scheduler.drones_by_id[move.drone_id]
+            if drone.id in printed:
                 continue
-            if drone.in_transit:
+            if drone.in_transit and not drone.arriving:
                 output.append(f"{drone.id}-{drone.current_connection}")
             else:
                 output.append(f"{drone.id}-{drone.current_zone}")
+            printed.add(drone.id)
+        for drone in self.drones:
+            if drone.id in printed:
+                continue
+            if drone.finished:
+                continue
+            if drone.current_zone == self.start_zone.name:
+                continue
+            if drone.in_transit and not drone.arriving:
+                output.append(f"{drone.id}-{drone.current_connection}")
+            else:
+                output.append(f"{drone.id}-{drone.current_zone}")
+            printed.add(drone.id)
         if output:
-            print(" ".join(output))
+            print(" ".join(sorted(output, key=lambda s:
+                  int(s.split("-")[0][1:]))))
         return completed_transit, arriving
 
     def handle_transit(self) -> tuple[list[Drone], list[Drone]]:
@@ -92,7 +111,6 @@ class Simulation:
                         if c.zone_a == origin.name and
                         c.zone_b == destination.name)
                     connection.drone_count -= 1
-                    origin.drone_count -= 1
                     destination.drone_count += 1
                     drone.current_zone = drone.destination_zone
                     drone.destination_zone = ""

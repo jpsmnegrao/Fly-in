@@ -55,7 +55,7 @@ class Scheduler:
                 continue
             choice = options[0]
             if len(options) > 1:
-                index = int(drone.id[1:]) % len(options)
+                index = (int(drone.id[1:]) - 1) % len(options)
                 choice = options[index]
             path = [start, choice]
             remaining = self.nav_graph.get_path(choice)
@@ -94,26 +94,35 @@ class Scheduler:
         A zone becomes available when a drone leaves it in the same turn.
         Therefore, we first calculate departures, then validate arrivals.
         """
-        temp_occupancy: dict[str, int] = {
+        occupancy: dict[str, int] = {
             zone.name: zone.drone_count for zone in
             self.zones_by_name.values()}
-        leaving: dict[str, int] = {}
+        connection_usage: dict[str, int] = {
+            connection.name: connection.drone_count
+            for connection in self.map_data.connections
+        }
+        valid: list[Move] = []
         for move in proposed_moves:
             drone = self.drones_by_id[move.drone_id]
             origin = drone.current_zone
-            leaving[origin] = leaving.get(origin, 0) + 1
-        effective_occupancy: dict[str, int] = temp_occupancy.copy()
-        for zone_name, count in leaving.items():
-            effective_occupancy[zone_name] -= count
-        valid: list[Move] = []
-        approved_count: dict[str, int] = {}
-        for move in proposed_moves:
-            zone = self.zones_by_name[move.target]
-            incoming = approved_count.get(move.target, 0)
-            current = effective_occupancy.get(move.target, 0)
-            if current + incoming < zone.max_drones:
-                approved_count[move.target] = incoming + 1
+            destination = self.zones_by_name[move.target]
+            connection = next(
+                (
+                    c for c in self.map_data.connections
+                    if c.zone_a == origin and c.zone_b == destination.name
+                ), None)
+            if connection and destination.zone_type == "restricted":
+                if (connection_usage[connection.name] >=
+                        connection.max_capacity):
+                    continue
                 valid.append(move)
+                occupancy[origin] -= 1
+                connection_usage[connection.name] += 1
+                continue
+            if occupancy[move.target] < destination.max_drones:
+                valid.append(move)
+                occupancy[origin] -= 1
+                occupancy[move.target] += 1
         return valid
 
     def commit_moves(self, moves: list[Move]) -> None:
@@ -124,6 +133,7 @@ class Scheduler:
             dest = self.zones_by_name[move.target]
             if not move.in_transit:
                 if dest.zone_type == "restricted":
+                    drone.in_connection = True
                     drone.in_transit = True
                     drone.destination_zone = move.target
                     drone.current_connection = f"{origin.name}-{dest.name}"
