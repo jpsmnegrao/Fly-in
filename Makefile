@@ -18,11 +18,11 @@ MAIN := main.py
 # 8 <= 12
 # MAP ?= maps/hard/01_maze_nightmare.txt
 # 14 <= 30
-MAP ?= maps/hard/02_capacity_hell.txt
+# MAP ?= maps/hard/02_capacity_hell.txt
 # 16 <= 35
 # MAP ?= maps/hard/03_ultimate_challenge.txt
 # 26 <= 45
-# MAP ?= maps/challenger/01_the_impossible_dream.txt
+MAP ?= maps/challenger/01_the_impossible_dream.txt
 # 43 <= 45
 
 .PHONY: install run debug clean lint lint-strict

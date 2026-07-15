@@ -4,23 +4,33 @@
 
 ## Description
 
-Fly-in is a drone traffic simulation project developed as part of the 42 curriculum.
+Fly-in is a drone traffic simulation project developed as part of the 42
+curriculum.
 
-The objective is to simulate multiple drones travelling simultaneously through a network of interconnected zones while respecting all movement constraints defined by the map. Every turn, the simulator computes valid movements for every drone, resolves conflicts caused by limited zone or connection capacity, and prints the resulting simulation until every drone reaches the destination.
+The objective is to simulate multiple drones travelling simultaneously through
+a network of interconnected zones while respecting all movement constraints
+defined by the map.
 
-The project focuses on graph algorithms, pathfinding, scheduling, state management and performance. A graphical visualization using Pygame is also provided to help understand the simulation and debug drone movement.
+Every turn, the simulator computes valid movements for every drone, resolves
+conflicts caused by limited zone or connection capacity, and prints the
+resulting simulation until every drone reaches the destination.
+
+The project focuses on graph algorithms, pathfinding, scheduling, state
+management and performance. A graphical visualization using Pygame is also
+provided to help understand the simulation and debug drone movement.
 
 ---
 
 # Features
 
-- Reverse Dijkstra pathfinding.
-- Simultaneous movement of multiple drones.
-- Zone capacity enforcement.
-- Restricted connection handling with multi-turn traversal.
-- Automatic conflict resolution when several drones compete for the same destination.
-- Priority-zone aware pathfinding.
-- Pygame visualization of the simulation.
+- Reverse Dijkstra pathfinding;
+- Simultaneous movement of multiple drones;
+- Zone capacity enforcement;
+- Restricted connection handling with multi-turn traversal;
+- Automatic conflict resolution when several drones compete for the same
+destination;
+- Priority-zone aware pathfinding;
+- Pygame visualization of the simulation;
 - Text-based simulation output.
 
 ---
@@ -29,7 +39,8 @@ The project focuses on graph algorithms, pathfinding, scheduling, state manageme
 
 ## Pathfinding
 
-The navigation graph is built from the parsed map by creating an adjacency list representing every connection between zones.
+The navigation graph is built from the parsed map by creating an adjacency
+list representing every connection between zones.
 
 A reverse Dijkstra algorithm is executed once from the end zone.
 
@@ -38,15 +49,21 @@ The cost of entering each zone is:
 | Zone type | Cost |
 |-----------|-----:|
 | Normal | 1 |
-| Priority | 0 |
+| Priority | 1 |
 | Restricted | 2 |
 | Blocked | Not traversable |
 
-Running the search backwards allows the shortest distance to the goal to be precomputed for every reachable zone.
+Running the search backwards allows the shortest distance to the goal to be
+precomputed for every reachable zone.
 
-Whenever multiple shortest paths exist, all valid next moves are stored. During the simulation, drones deterministically select one of those alternatives, providing load distribution while still following an optimal route.
+Whenever multiple shortest paths exist, the algorithm first prefers paths
+whose next hop is a priority zone. If multiple equivalent candidates still
+remain, all valid next moves are stored. During the simulation, drones
+deterministically select one of those alternatives, providing load
+distribution while still following an optimal route.
 
-Because the pathfinding information is computed only once, no graph searches are performed during the simulation itself.
+Because the pathfinding information is computed only once, no graph searches
+are performed during the simulation itself.
 
 ---
 
@@ -59,15 +76,20 @@ Every simulation turn follows four phases:
 3. Filter proposals according to zone and connection capacity.
 4. Commit all valid moves simultaneously.
 
-Moves are never applied immediately after being proposed. Instead, every proposal is validated first to guarantee that no capacity constraints are violated.
+Moves are never applied immediately after being proposed. Instead, every
+proposal is validated first to guarantee that no capacity constraints are
+violated.
 
 Restricted connections are treated differently from normal movement:
 
 - entering a restricted connection immediately occupies the connection;
-- the destination restricted zone is occupied only after the required travel time;
-- the connection becomes available again once the drone reaches the destination zone.
+- the destination restricted zone is occupied only after the required travel
+time;
+- the connection becomes available again once the drone reaches the destination
+zone.
 
-This allows restricted connections to behave independently from the capacity of the destination zone.
+This allows restricted connections to behave independently from the capacity
+of the destination zone.
 
 ---
 
@@ -79,7 +101,9 @@ When several drones attempt incompatible moves during the same turn:
 - valid moves are committed simultaneously;
 - rejected drones simply retry during the next turn.
 
-Zone occupancy is tracked dynamically while validating proposals, allowing drones leaving a zone during the current turn to immediately free capacity for incoming drones.
+Zone occupancy is tracked dynamically while validating proposals, allowing
+drones leaving a zone during the current turn to immediately free capacity for
+incoming drones.
 
 ---
 
@@ -96,7 +120,8 @@ The visualization displays:
 - drones travelling through restricted connections;
 - turn-by-turn progression.
 
-The graphical interface greatly simplifies debugging and makes it easier to verify that movement, congestion and restricted connections behave as expected.
+The graphical interface greatly simplifies debugging and makes it easier to
+verify that movement, congestion and restricted connections behave as expected.
 
 ---
 
@@ -159,7 +184,10 @@ Several implementation decisions were made to keep the simulation efficient:
 - Dictionary lookups are used extensively for constant-time access.
 - Drone movement is separated into proposal, validation and commit phases.
 - Restricted connections are modelled explicitly rather than as ordinary zones.
-- Multiple shortest-path alternatives are supported while preserving optimality.
+- Multiple shortest-path alternatives are supported while preserving
+  optimality.
+- Priority zones are used as a tie-breaker when multiple shortest paths have
+  the same total cost.
 
 ---
 
@@ -174,7 +202,8 @@ Several implementation decisions were made to keep the simulation efficient:
 
 ## AI Usage
 
-AI tools were used throughout the development process as an assistant, including:
+AI tools were used throughout the development process as an assistant,
+including:
 
 - discussing algorithm design;
 - reviewing implementation choices;
@@ -182,6 +211,7 @@ AI tools were used throughout the development process as an assistant, including
 - explaining Python language features;
 - improving documentation and code comments.
 
-All design decisions, implementation, testing and final validation were performed manually.
+All design decisions, implementation, testing and final validation were
+performed manually.
 
 ---
