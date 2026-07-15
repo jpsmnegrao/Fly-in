@@ -1,7 +1,6 @@
 """Map file parser for the Fly-In drone routing simulation.
 
-Parses map configuration files into structured data objects for use by the
-renderer and pathfinding logic.
+Parses map files into structured data objects used throughout the simulation.
 """
 
 
@@ -10,17 +9,17 @@ import pygame
 
 
 class ParserReturn:
-    """Parses a map configuration file into a MapData object.
+    """Parse a map configuration file into a MapData object.
 
-    Reads zone and connection definitions from a structured text file and
-    returns validated MapData containing zones and connections.
+    Reads a map file, validates its contents and returns a populated MapData
+    instance.
 
     Attributes:
         filename: Path to the map configuration file.
     """
 
     def __init__(self, filename: str) -> None:
-        """Initialize the parser with a map file path.
+        """Initialize the parser with the path to a map file.
 
         Args:
             filename: Path to the map configuration file to parse.
@@ -28,19 +27,19 @@ class ParserReturn:
         self.filename = filename
 
     def zone_parser(self, line: str, hub_type: str, line_num: int) -> Zone:
-        """Parse a single zone line into a Zone object.
+        """Parse a zone line into a Zone object.
 
         Args:
             line: A raw line from the map file starting with hub:, start_hub:,
                 or end_hub:.
             hub_type: The role of the zone: 'start', 'end', or 'hub'.
+            line_num: Line number in the map file, used for error reporting.
 
         Returns:
             A Zone object populated with the parsed data.
 
         Raises:
-            ValueError: If the line is malformed, coordinates are invalid or
-                metadata contains invalid values.
+            ValueError: If the line is malformed or contains invalid data.
         """
         zone_values: list[str] = line.split(" ")
         if len(zone_values) < 4:
@@ -102,17 +101,17 @@ class ParserReturn:
         )
 
     def connection_parser(self, line: str, line_num: int) -> Connection:
-        """Parse a single connection line into a Connection object.
+        """Parse a connection line into a Connection object.
 
         Args:
             line: A raw line from the map file starting with connection:.
+            line_num: Line number in the map file, used for error reporting.
 
         Returns:
             A Connection object populated with the parsed data.
 
         Raises:
-            ValueError: If the line is malformed or metadata contains invalid
-                values.
+            ValueError: If the line is malformed or contains invalid data.
         """
         connection_values = line.split(" ")
         if len(connection_values) < 2:
@@ -154,14 +153,14 @@ class ParserReturn:
         )
 
     def parser(self) -> MapData:
-        """Parse the map file and return a complete MapData object.
+        """Parse, validate and return the contents of a map file.
 
         Returns:
-            A MapData object containing all zones and connections.
+            A populated MapData object.
 
         Raises:
-            ValueError: If the file is not found, cannot be read, or contains
-                invalid or missing required data.
+            ValueError: If the file cannot be read or the map contains
+                invalid or missing data.
         """
         map_config = MapData()
         name = self.filename.split("/")[2]
@@ -245,6 +244,7 @@ class ParserReturn:
             z for z in map_config.zones if z.hub_type == "start")
         map_config.end_zone = next(
             z for z in map_config.zones if z.hub_type == "end")
+        # Allow all drones to occupy the start and end zones simultaneously.
         map_config.start_zone.drone_count = map_config.nb_drones
         map_config.start_zone.max_drones = map_config.nb_drones
         map_config.end_zone.max_drones = map_config.nb_drones

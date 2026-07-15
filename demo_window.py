@@ -1,7 +1,7 @@
 """Pygame-based interactive demo window for the Fly-In simulation.
 
-Renders the map, zones, and connections, and provides a placeholder
-walking-sprite animation and click-to-inspect UI for zones/connections.
+Renders the map, animates drone movement, and provides controls for stepping
+through the simulation and inspecting zones and connections.
 """
 
 
@@ -12,15 +12,18 @@ from map_renderer import MapRenderer
 from simulation import Simulation
 
 
-class DemoWindow():
-    """mambo"""
+class DemoWindow:
+    """Interactive pygame window for visualizing the Fly-In simulation.
+
+    Handles rendering, user interaction, and animation while coordinating
+    simulation steps with the Simulation object.
+    """
 
     def __init__(self, map_data: MapData, simulation: Simulation) -> None:
-        """Interactive pygame window for map and demo animation visualization.
+        """Initialize the demo window.
 
-        Handles window setup, user input (clicks and key presses), rendering
-        of the map/zones/connections, an info panel, and a placeholder sprite
-        animation used to preview movement along the map area.
+        Creates the pygame window, initializes rendering resources, UI state,
+        animation state, and simulation-related data.
         """
         # pygame initialization
         pygame.init()
@@ -66,7 +69,7 @@ class DemoWindow():
         self.walk_up = pygame.transform.flip(
             pygame.image.load("assets/wwalku.png"), True, False)
         self.walk_up.set_colorkey((128, 128, 192))
-        self.drone_anim: dict[str, dict[Any]] = {
+        self.drone_anim: dict[str, dict[str, Any]] = {
             d.id: {
                 "start_pos": self.map_renderer.zone_position(
                     self.map_renderer.zone_dict[d.current_zone]),
@@ -84,15 +87,12 @@ class DemoWindow():
         self.current_frame = 0
         self.frame_timer = 0
         self.frame_direction = 1
-        self.speed: float = 590 / 5000
-        self.x = float(self.start_pos[0] - self.walk.get_width() // 2)
-        self.y = float(self.start_pos[1] - self.frame_height // 2)
 
     def run(self) -> bool:
-        """Run the main loop: handle input, update animation, draw, repeat.
+        """Run the main application loop until the window is closed or reset.
 
-        Loops at 60 FPS until the window is closed or the user quits, then
-        shuts down pygame.
+        Loops at 60 FPS, processes input, updates the simulation and animation,
+        then shuts down pygame before returning whether a reset was requested.
         """
         while self.running:
             pygame.event.pump()
@@ -146,11 +146,10 @@ class DemoWindow():
         return self.reset_requested
 
     def handle_events(self) -> None:
-        """Process pygame events: quit, key presses, and mouse clicks.
+        """Process pygame events.
 
-        Handles window close, Q/ESC to quit, SPACE to start/pause the
-        placeholder animation, 0 to reset it, and left-click to select a zone
-        or connection.
+        Handles window close events, keyboard input for controlling the
+        simulation, and mouse clicks for selecting zones or connections.
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -213,11 +212,10 @@ class DemoWindow():
                 return
 
     def draw(self) -> None:
-        """Render one full frame: background, map, panels, and drone sprites.
+        """Render a complete frame.
 
-        Clears the screen, draws the title, map area, connections, zones, info
-        panels, and now iterates through active drones to render their current
-        positions.
+        Draws the map, UI panels, and all active drones at their current
+        animated positions, then updates the display.
         """
         self.screen.fill("black")
         self.screen.blit(self.title, self.title_pos)
@@ -229,7 +227,6 @@ class DemoWindow():
             anim = self.drone_anim[drone.id]
             if drone.finished and anim["progress"] >= 1.0:
                 continue
-            anim = self.drone_anim[drone.id]
             t = anim["progress"]
             sx, sy = anim["start_pos"]
             ex, ey = anim["end_pos"]
@@ -259,19 +256,13 @@ class DemoWindow():
         pygame.display.flip()
 
     def draw_info_panel(self) -> None:
-        """Draw all three bottom info panels: simulation, selection, help."""
+        """Draw all bottom information panels."""
         self.draw_simulation_panel()
         self.draw_selection_panel()
         self.draw_help_panel()
 
     def draw_simulation_panel(self) -> None:
-        """Draw the bottom-left panel showing simulation status.
-
-        Note:
-            "Total drone moves", "Turn", and "Stat 4" are placeholder labels
-            with no value rendered yet. TODO: wire these up once simulation
-            state is tracked/exposed here.
-        """
+        """Draw the bottom-left panel showing simulation status."""
         rect = self.bottoml_panel
         font = pygame.font.SysFont(None, 20)
         if all(d.finished for d in self.simulation.drones):
@@ -298,8 +289,9 @@ class DemoWindow():
                 text, text.get_rect(topleft=(x, y + i * line_height)))
 
     def draw_selection_panel(self) -> None:
-        """Draw the bottom-center panel showing the currently selected zone or
-        connection's details, or a prompt if nothing is selected.
+        """Draw information about the selected zone or connection.
+
+        Displays a prompt when no object is selected.
         """
         rect = self.bottomc_panel
         font = pygame.font.SysFont(None, 20)
@@ -333,7 +325,7 @@ class DemoWindow():
 
     def draw_help_panel(self) -> None:
         """Draw the bottom-right panel showing keyboard controls and
-        interaction hints.
+        interaction instructions.
         """
         rect = self.bottomr_panel
         font = pygame.font.SysFont(None, 20)
@@ -355,7 +347,7 @@ class DemoWindow():
             self.screen.blit(text, (x, y + i * line_height))
 
     def update_animation(self, dt: int) -> None:
-        """Advance the sprite sheet frame for the walking animation.
+        """Update drone animations and advance the walking sprite animation.
 
         Args:
             dt: Milliseconds elapsed since the last frame.
@@ -380,8 +372,6 @@ class DemoWindow():
                 self.running_animation = False
 
     def reset_animation(self) -> None:
-        """Reset the placeholder animation to its starting position and frame,
-        and stop it if running.
-        """
+        """Request a simulation reset and close the current demo window."""
         self.reset_requested = True
         self.running = False

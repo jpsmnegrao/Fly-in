@@ -132,7 +132,7 @@ verify that movement, congestion and restricted connections behave as expected.
 - Python 3.12+
 - Pygame
 
-## Build
+## Installation
 
 ```bash
 make
@@ -164,12 +164,13 @@ python3 main.py maps/simple.txt
 .
 ├── main.py
 ├── parser.py
-├── scheduler.py
-├── pathfinder.py
-├── simulation.py
-├── renderer.py
 ├── data.py
-├── maps/
+├── pathfinder.py
+├── scheduler.py
+├── simulation.py
+├── map_renderer.py
+├── demo_window.py
+├── assets/
 └── README.md
 ```
 

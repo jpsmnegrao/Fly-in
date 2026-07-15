@@ -81,9 +81,6 @@ class Scheduler:
                 proposed_moves.append(Move(
                     drone_id=drone.id,
                     target=path[1],
-                    target_zone=path[1],
-                    target_connection=None,
-                    in_transit=False
                 ))
         return proposed_moves
 
@@ -131,20 +128,19 @@ class Scheduler:
             drone = self.drones_by_id[move.drone_id]
             origin = self.zones_by_name[drone.current_zone]
             dest = self.zones_by_name[move.target]
-            if not move.in_transit:
-                if dest.zone_type == "restricted":
-                    drone.in_transit = True
-                    drone.destination_zone = move.target
-                    drone.current_connection = f"{origin.name}-{dest.name}"
-                    drone.remaining_turns = 2
-                    origin.drone_count -= 1
-                    connection = next(
-                        c for c in self.map_data.connections
-                        if c.zone_a == origin.name and c.zone_b == dest.name)
-                    connection.drone_count += 1
-                else:
-                    drone.current_zone = move.target
-                    origin.drone_count -= 1
-                    dest.drone_count += 1
-                    if drone.current_zone == self.end_zone:
-                        drone.finished = True
+            if dest.zone_type == "restricted":
+                drone.in_transit = True
+                drone.destination_zone = move.target
+                drone.current_connection = f"{origin.name}-{dest.name}"
+                drone.remaining_turns = 2
+                origin.drone_count -= 1
+                connection = next(
+                    c for c in self.map_data.connections
+                    if c.zone_a == origin.name and c.zone_b == dest.name)
+                connection.drone_count += 1
+            else:
+                drone.current_zone = move.target
+                origin.drone_count -= 1
+                dest.drone_count += 1
+                if drone.current_zone == self.end_zone:
+                    drone.finished = True

@@ -1,7 +1,7 @@
 """Entry point for the Fly-In drone routing simulation.
 
-Parses a map file given on the command line, builds the navigation graph, and
-launches the demo window.
+Parses the map file, builds the navigation graph, initializes the simulation
+and launches the demo window.
 """
 
 from parser import ParserReturn
@@ -12,11 +12,12 @@ import sys
 
 
 def main() -> None:
-    """Parse the map file from argv, build the nav graph, and run the demo.
+    """Parse the map file, build the nav graph, and run the demo.
 
-    Expects exactly one command-line argument: the path to a map configuration
-    file. On any parsing error (invalid map, missing file, etc.), prints the
-    error message and exits gracefully.
+    Uses the map file specified as the first command-line argument to build the
+    navigation graph and initialize the simulation. If the window requests a
+    restart, the simulation is recreated from the same map. On any parsing
+    error, prints the error message and exits gracefully.
     """
     if len(sys.argv) < 2:
         print("Usage: python3 main.py <map_file>")

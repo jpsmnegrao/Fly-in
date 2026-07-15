@@ -1,6 +1,4 @@
-"""Core simulation loop for moving drones from the start zone to the end zone,
-turn by turn.
-"""
+"""Core simulation loop for advancing the drone simulation turn by turn."""
 
 
 from data import MapData, Drone, Zone
@@ -9,18 +7,14 @@ from scheduler import Scheduler
 
 
 class Simulation:
-    """Owns simulation state (turn count, drones) and advances it by one turn
-    at a time via step() and handle_transit().
-    """
+    """Manage the simulation state and advance it one turn at a time."""
 
     def __init__(self, map_data: MapData, nav_graph: NavGraph) -> None:
-        """Initialize simulation state and spawn all drones at the start zone.
+        """Initialize the simulation and create all drones.
 
         Args:
-            map_data: Parsed map configuration (zones, connections, and drone
-            count).
-            nav_graph: Precomputed navigation graph providing next_move and
-            adjacency lookups.
+            map_data: Parsed map data.
+            nav_graph: Precomputed navigation graph.
         """
         self.map_data = map_data
         self.nav_graph = nav_graph
@@ -46,8 +40,9 @@ class Simulation:
     def step(self) -> tuple[list[Drone], list[Drone]]:
         """Advance the simulation by one turn.
 
-        Increments self.turn, advances any drones currently in transit,
-        then delegates move proposal/resolution/commit to the scheduler.
+        Increments the turn counter, updates drones traversing restricted
+        connections, delegates movement scheduling, prints the resulting moves,
+        and returns the drones that arrived at or completed restricted transit.
         """
         self.turn += 1
         completed_transit, arriving = self.handle_transit()
@@ -88,14 +83,20 @@ class Simulation:
         return completed_transit, arriving
 
     def handle_transit(self) -> tuple[list[Drone], list[Drone]]:
-        """Advance drones currently in transit on a multi-turn (restricted)
-        connection, and mark drones finished on arrival at the end zone.
+        """Advance drones traversing restricted connections.
 
-        Decrements remaining_turns for each in-transit drone. At
-        remaining_turns == 1 (phase 2): drone arrives at restricted zone,
-        updates position and counts, sets arriving=True but stays in_transit.
-        At remaining_turns == 0 (phase 3): clears all transit state and marks
-        drone as completeed.
+        Decrements the remaining travel time for every drone in transit. When a
+        drone reaches the restricted destination zone, its position and
+        occupancy counts are updated and it is marked as arriving. On the
+        following turn, the transit state is cleared and the drone is marked as
+        finished if it has reached the end zone.
+
+        Returns:
+            A tuple containing:
+                - completed: Drones whose restricted traversal finished this
+                turn.
+                - arriving: Drones that reached the destination restricted zone
+                this turn but have not yet completed the traversal.
         """
         completed: list[Drone] = []
         arriving: list[Drone] = []

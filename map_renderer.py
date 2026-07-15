@@ -1,8 +1,8 @@
-"""Renders the map (zones and connections) onto a pygame surface.
+"""Render the map (zones and connections) onto a pygame surface.
 
 Computes a scale factor and centering offset from zone coordinates so the map
 fits within a fixed-size drawing area, then draws zones (shaped by zone_type)
-and connections (with live drone counts) each frame.
+and connections (with live drone counts).
 """
 
 
@@ -10,13 +10,12 @@ import pygame
 from data import MapData, Zone
 
 
-class MapRenderer():
+class MapRenderer:
     """Draws zones and connections for a parsed map onto a pygame surface.
 
-    Converts zone (x, y) coordinates from the map file into screen coordinates,
-    scaled and centered to fit within the configured map drawing area, and
-    renders each zone/connection with a shape and drone-count label
-    appropriate to its type.
+    Converts map coordinates into scaled screen coordinates and renders each
+    zone with a shape appropriate to its type, draws the connections, and
+    displays live drone counts.
     """
 
     def __init__(self, map_data: MapData, screen: pygame.Surface) -> None:
@@ -48,8 +47,8 @@ class MapRenderer():
         coordinate-space bounding box, then derives a scale factor so that box
         fits within the drawing area (map_width/height minus an 80px margin),
         capped at 150. Falls back to a fixed scale of 100.0 if all zones share
-        the same x and y (zero range). Also builds zone_dict for fast zone
-        lookup by name.
+        the same x and y (zero range). Also builds a lookup table for fast zone
+        search of zones by name.
         """
         self.max_x = max(zone.x for zone in self.map_data.zones)
         self.max_y = max(zone.y for zone in self.map_data.zones)
@@ -75,10 +74,10 @@ class MapRenderer():
     def draw_zones(self) -> None:
         """Draw every zone with a shape based on its zone_type.
 
-        normal zones are drawn as filled circles, blocked as an X, restricted
-        as a diamond, and priority as a star-like polygon. Each zone is
-        labeled with its current drone_count, rendered with a black shadow for
-        readability.
+        Normal zones are drawn as filled circles, blocked zones as Xs,
+        restricted zones as diamonds, and priority zones as star-shaped
+        polygons. Each zone is labeled with its current drone_count, rendered
+        with a black shadow for visibility.
         """
         for zone in self.map_data.zones:
             position = self.zone_position(zone)
@@ -128,8 +127,8 @@ class MapRenderer():
         """Draw every connection as a line with a drone-count label.
 
         Each connection is drawn as a black line between its two zones, with a
-        small white rect at the midpoint showing the current drone_count
-        traversing it.
+        small white rect at the midpoint showing the current number of drones
+        traversing the connection.
         """
         for connection in self.map_data.connections:
             start = self.zone_position(self.zone_dict[connection.zone_a])
@@ -173,8 +172,7 @@ class MapRenderer():
             zone: The zone whose position to convert.
 
         Returns:
-            The (x, y) screen position, centered and scaled according to
-            coords_center_x/y and scale_factor.
+            The (x, y) screen position after scaling and centering the map.
         """
         screen_center_x = self.map_x + self.map_width / 2
         screen_center_y = self.map_y + self.map_height / 2

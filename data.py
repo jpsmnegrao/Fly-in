@@ -1,4 +1,7 @@
-"""mambo jambo.
+"""Shared data structures used throughout the Fly-In simulation.
+
+Defines the dataclasses representing maps, zones, connections, drones and
+movement proposals.
 """
 
 
@@ -15,9 +18,11 @@ class Zone:
         x: X coordinate, used for rendering.
         y: Y coordinate, used for rendering.
         zone_type: Movement category determining how the zone is traversed:
-        'normal': costs 1 turn to enter; 'restricted': costs 2 turns;
-        'priority': costs 1 turn, preferred by the pathfinder over normal
-        zones; 'blocked': cannot be entered.
+            'normal' costs 1 turn to enter;
+            'priority' costs 1 turn and is preferred when multiple shortest
+                paths exist;
+            'restricted' costs 2 turns to enter;
+            'blocked' cannot be entered.
         color: Display color, used for rendering.
         max_drones: Maximum number of drones allowed in this zone at once.
         drone_count: Current number of drones occupying this zone.
@@ -34,13 +39,13 @@ class Zone:
 
 @dataclass
 class Connection:
-    """A directed link between two zones in the map graph.
+    """A connection between two zones in the map graph.
 
     Attributes:
         zone_a: Name of the origin zone.
         zone_b: Name of the destination zone.
         max_capacity: Maximum number of drones allowed to traverse this
-            connection simultaneously (max_link_capacity).
+            connection simultaneously.
         drone_count: Current number of drones traversing this connection.
         name: Display identifier for the connection, formatted as
             '<zone_a>-<zone_b>'.
@@ -57,9 +62,12 @@ class MapData:
     """Parsed contents of a map configuration file.
 
     Attributes:
+        map_name: Name of the map.
         nb_drones: Total number of drones to simulate.
         zones: All zones defined in the map.
         connections: All connections defined in the map.
+        start_zone: Reference to the map's start zone.
+        end_zone: Reference to the map's end zone.
         map_x: X offset for rendering the map. (inferred, not subject-sourced)
         map_y: Y offset for rendering the map. (inferred, not subject-sourced)
         map_width: Width of the rendered map area. (inferred, not
@@ -85,18 +93,21 @@ class Drone:
 
     Attributes:
         id: Unique identifier for the drone (e.g. 'D1').
-        current_zone: Name of the zone the drone currently occupies.
+        current_zone: Name of the zone currently occupied by the drone.
+        current_connection: Name of the restricted connection currently being
+            traversed, or an empty string if the drone is not in transit.
         finished: Whether the drone has reached the end zone.
-        in_transit: Whether the drone is mid-traversal of a multi-turn
-            (restricted) connection.
-        destination_zone: Name of the zone the drone is travelling toward
-            while in_transit.
-        remaining_turns: Number of turns left before the drone arrives at
-            destination_zone, when in_transit.
+        in_transit: Whether the drone is traversing a restricted connection.
+        arriving: Whether the drone has reached the destination restricted zone
+            but has not yet completed the transit.
+        destination_zone: Name of the restricted zone the drone is travelling
+            toward while in transit.
+        remaining_turns: Number of turns remaining before the restricted
+            traversal is complete.
     """
     id: str
     current_zone: str = ""
-    current_connection = ""
+    current_connection: str = ""
     finished: bool = False
     in_transit: bool = False
     arriving: bool = False
@@ -106,21 +117,11 @@ class Drone:
 
 @dataclass
 class Move:
-    """A proposed or committed movement for a single drone in one turn.
+    """A proposed movement for a single drone during one simulation turn.
 
     Attributes:
         drone_id: Identifier of the drone making the move.
-        target: Name of the zone or connection the drone is moving toward.
-        target_zone: Name of the destination zone, if moving directly into
-            a zone; otherwise None.
-        target_connection: Name of the connection being entered, if the
-            move is the first turn of a multi-turn (restricted) traversal;
-            otherwise None.
-        in_transit: Whether this move represents continued travel along a
-            connection rather than a fresh departure.
+        target: Name of the destination zone proposed for this turn.
     """
     drone_id: str
     target: str
-    target_zone: str | None
-    target_connection: str | None
-    in_transit: bool

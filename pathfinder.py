@@ -1,11 +1,8 @@
-"""Builds a navigation graph from map data and computes shortest paths to the
-end zone using a reverse Dijkstra search.
+"""Builds a navigation graph from map data and precomputes shortest paths.
 
-The graph is treated as bidirectional, with distances and next-hop moves
-computed once from every zone toward the end zone. Movement costs are
-determined by the zone_type (normal/priority=1, restricted=2,
-blocked=inaccessible). Paths for individual drones are derived from this
-shared table.
+An adjacency structure is created from the map connections, then a reverse
+Dijkstra search computes the minimum distance and next move from every
+reachable zone to the end zone.
 """
 
 
@@ -14,21 +11,20 @@ from data import MapData, Zone, Connection
 
 
 class NavGraph:
-    """Precomputes shortest paths from every zone to the end zone.
+    """Precompute shortest paths from every zone to the end zone.
 
     Builds an adjacency structure from the map's connections, then runs a
     reverse Dijkstra search rooted at the end zone to compute, for every zone,
-    its distance to the end and which neighboring zone to move to next
-    (next_move). Individual drone paths are derived from this shared table
-    rather than computed per-drone.
+    its distance to the end zone and the next zone along the selected shortest
+    path. Individual drone paths are derived from this shared table rather than
+    computed per-drone.
     """
 
     def __init__(self, map_data: MapData) -> None:
-        """Initialize empty lookup/adjacency/distance structures.
+        """Initialize the navigation graph.
 
         Args:
-            map_data: Parsed map configuration (zones and connections) to
-            build the navigation graph from.
+            map_data: Parsed map data used to build the navigation graph.
         """
         self.map_data = map_data
         self.zones_by_names: dict[str, Zone] = {}
@@ -37,16 +33,14 @@ class NavGraph:
         self.next_move: dict[str, str] = {}
 
     def build_zone_lookup(self) -> None:
-        """Build a name-to-Zone lookup dict from map_data.zones."""
+        """Build a lookup table from zone names to Zone objects."""
         self.zones_by_names = {zone.name: zone for zone in self.map_data.zones}
 
     def build_adjacency(self) -> None:
-        """Build an adjacency dict registering each connection in both
-        directions.
+        """Build an adjacency list for the navigation graph.
 
-        For each connection, registers it under both zone_a and zone_b,
-        ensuring that the graph can be traversed bidirectionally during
-        pathfinding.
+        Registers every connection under both connected zones so the graph can
+        be traversed in either direction.
         """
         for connection in self.map_data.connections:
             if connection.zone_a not in self.adjacency:
@@ -57,14 +51,17 @@ class NavGraph:
             self.adjacency[connection.zone_b].append(connection)
 
     def reverse_dijkstra(self) -> None:
-        """Compute shortest distance and next-hop move from every zone to the
-        end zone, using a reverse Dijkstra search.
+        """Compute the shortest path from every reachable zone to the end zone.
 
-        Starts from the zone with hub_type 'end' at distance 0, then explores
-        outward via self.adjacency, accumulating movement cost based on the
-        zone_type of the zone being entered (normal/priority=1, restricted=2,
-        blocked=skipped entirely). Populates self.distances and self.next_move
-        for every reachable zone.
+        Runs a reverse Dijkstra search starting from the end zone. The cost of
+        entering a normal or priority zone is 1 turn, entering a restricted
+        zone costs 2 turns, and blocked zones are ignored. When multiple
+        shortest paths have the same total cost, paths through priority zones
+        are preferred.
+
+        Populates self.distances with the minimum cost from each zone to the
+        end zone and self.next_move with the next zone along the selected
+        shortest path.
         """
         for zone in self.map_data.zones:
             if zone.hub_type == "end":
@@ -81,7 +78,10 @@ class NavGraph:
                 continue
             visited.add(current)
             for connection in self.adjacency.get(current, []):
-                prev = connection.zone_a
+                if connection.zone_a == current:
+                    prev = connection.zone_b
+                else:
+                    prev = connection.zone_a
                 zone_type = self.zones_by_names[prev].zone_type
                 if zone_type == "blocked":
                     continue
@@ -107,7 +107,7 @@ class NavGraph:
     def get_path(self, start: str) -> list[str]:
         """Build the full path from a starting zone to the end zone.
 
-        Walks self.next_move starting at `start` until a zone with no recorded
+        Walks self.next_move starting at start until a zone with no recorded
         next move is reached (typically the end zone, or a zone unreachable
         from the end).
 
@@ -127,7 +127,15 @@ class NavGraph:
         return path
 
     def get_possible_next_moves(self, zone_name: str) -> list[str]:
-        """mambo jambo"""
+        """Return neighbouring zones that belong to a shortest path.
+
+        Args:
+            zone_name: Name of the current zone.
+
+        Returns:
+            A list of neighbouring zones that belong to a shortest path to the
+            end zone.
+        """
         possible_moves: list[str] = []
         current_distance = self.distances[zone_name]
         for connection in self.adjacency.get(zone_name, []):
