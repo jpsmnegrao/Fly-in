@@ -133,7 +133,6 @@ class Scheduler:
             dest = self.zones_by_name[move.target]
             if not move.in_transit:
                 if dest.zone_type == "restricted":
-                    drone.in_connection = True
                     drone.in_transit = True
                     drone.destination_zone = move.target
                     drone.current_connection = f"{origin.name}-{dest.name}"

@@ -67,6 +67,7 @@ class MapData:
         map_height: Height of the rendered map area. (inferred, not
             subject-sourced)
     """
+    map_name: str = ""
     nb_drones: int | None = None
     zones: list[Zone] = field(default_factory=list)
     connections: list[Connection] = field(default_factory=list)

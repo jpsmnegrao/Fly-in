@@ -6,6 +6,7 @@ walking-sprite animation and click-to-inspect UI for zones/connections.
 
 
 import pygame
+from typing import Any
 from data import MapData, Zone, Connection
 from map_renderer import MapRenderer
 from simulation import Simulation
@@ -65,7 +66,7 @@ class DemoWindow():
         self.walk_up = pygame.transform.flip(
             pygame.image.load("assets/wwalku.png"), True, False)
         self.walk_up.set_colorkey((128, 128, 192))
-        self.drone_anim: dict[str, dict] = {
+        self.drone_anim: dict[str, dict[Any]] = {
             d.id: {
                 "start_pos": self.map_renderer.zone_position(
                     self.map_renderer.zone_dict[d.current_zone]),
@@ -281,13 +282,12 @@ class DemoWindow():
             state = "Running"
         lines = [
             "SIMULATION:",
-            "Map: IMPLEMENT MAP NAME HERE",
+            f"Map: {self.map_data.map_name}",
             f"State: {state}",
             f"Number of drones: {self.map_data.nb_drones}",
-            f"Finished: {sum(1 for d in self.simulation.drones
-                             if d.finished)}",
+            f"Ended: {sum(1 for d in self.simulation.drones if d.finished)}",
             f"Turn: {self.simulation.turn}",
-            f"Simulation mode: {'Continuous' if self.auto_play else 'By turn'}"
+            f"Simulation mode: {'Auto' if self.auto_play else 'Turn-based'}"
         ]
         x = rect.x + 10
         y = rect.y + 10
@@ -345,8 +345,7 @@ class DemoWindow():
             "ESC / Q: quit window",
             "",
             "INTERACTIONS:",
-            "Click on a zone or connection to",
-            "see their information"
+            "Click on a zone or connection to see their information"
         ]
         x = rect.x + 10
         y = rect.y + 10
