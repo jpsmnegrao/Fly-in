@@ -95,6 +95,14 @@ class NavGraph:
                     self.distances[prev] = new_dist
                     self.next_move[prev] = current
                     heapq.heappush(queue, (new_dist, prev))
+                elif new_dist == self.distances[prev]:
+                    current_next = self.next_move.get(prev)
+                    if (current_next is not None and
+                            self.zones_by_names[current].zone_type ==
+                            "priority" and
+                            self.zones_by_names[current_next].zone_type ==
+                            "priority"):
+                        self.next_move[prev] = current
 
     def get_path(self, start: str) -> list[str]:
         """Build the full path from a starting zone to the end zone.
