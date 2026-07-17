@@ -151,6 +151,7 @@ class DemoWindow:
         Handles window close events, keyboard input for controlling the
         simulation, and mouse clicks for selecting zones or connections.
         """
+        simulation_finished = all(d.finished for d in self.simulation.drones)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -159,7 +160,7 @@ class DemoWindow:
                     self.running = False
                 elif event.key == pygame.K_m:
                     self.auto_play = not self.auto_play
-                elif event.key == pygame.K_SPACE:
+                elif event.key == pygame.K_SPACE and not simulation_finished:
                     if self.auto_play:
                         self.running_animation = not self.running_animation
                     else:
