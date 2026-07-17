@@ -180,6 +180,6 @@ class MapRenderer:
             screen_center_x + (zone.x - self.coords_center_x) *
             self.scale_factor)
         screen_y = (
-            screen_center_y + (zone.y - self.coords_center_y) *
+            screen_center_y - (zone.y - self.coords_center_y) *
             self.scale_factor)
         return (int(screen_x), int(screen_y))

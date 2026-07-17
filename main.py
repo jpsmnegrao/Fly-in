@@ -27,9 +27,6 @@ def main() -> None:
             map_parser = ParserReturn(sys.argv[1])
             map_data = map_parser.parser()
             nav_graph = NavGraph(map_data)
-            nav_graph.build_zone_lookup()
-            nav_graph.build_adjacency()
-            nav_graph.reverse_dijkstra()
             simulation = Simulation(map_data, nav_graph)
             window = DemoWindow(map_data, simulation)
             if not window.run():

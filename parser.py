@@ -163,13 +163,12 @@ class ParserReturn:
                 invalid or missing data.
         """
         map_config = MapData()
-        name = self.filename.split("/")[2]
-        category = self.filename.split("/")[1]
-        name = (name.removesuffix(".txt").split("_", 1)[1]
-                .replace("_", " ").title())
-        map_config.map_name = f"{category.title()} - {name}"
         try:
             with open(self.filename, 'r') as configs:
+                name = self.filename.split("/")[-1]
+                name = (name.removesuffix(".txt").split("_", 1)[1]
+                        .replace("_", " ").title())
+                map_config.map_name = f"{name}"
                 existing_connections = set()
                 line_num = 0
                 for line in configs:

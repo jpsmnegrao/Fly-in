@@ -31,6 +31,9 @@ class NavGraph:
         self.adjacency: dict[str, list[Connection]] = {}
         self.distances: dict[str, float] = {}
         self.next_move: dict[str, str] = {}
+        self.build_zone_lookup()
+        self.build_adjacency()
+        self.reverse_dijkstra()
 
     def build_zone_lookup(self) -> None:
         """Build a lookup table from zone names to Zone objects."""

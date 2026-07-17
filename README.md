@@ -26,7 +26,7 @@ provided to help understand the simulation and debug drone movement.
 - Reverse Dijkstra pathfinding;
 - Simultaneous movement of multiple drones;
 - Zone capacity enforcement;
-- Restricted connection handling with multi-turn traversal;
+- Restricted connection handling with multi-turn travel;
 - Automatic conflict resolution when several drones compete for the same
 destination;
 - Priority-zone aware pathfinding;
@@ -80,16 +80,14 @@ Moves are never applied immediately after being proposed. Instead, every
 proposal is validated first to guarantee that no capacity constraints are
 violated.
 
-Restricted connections are treated differently from normal movement:
+Travel to restricted zones is treated differently from normal movement:
 
-- entering a restricted connection immediately occupies the connection;
+- to go to a restricted zone a drone must first stop in a restricted
+  connection;
 - the destination restricted zone is occupied only after the required travel
 time;
-- the connection becomes available again once the drone reaches the destination
-zone.
-
-This allows restricted connections to behave independently from the capacity
-of the destination zone.
+- the connection becomes available again once the drone reaches the restricted
+zone so another drone can take it.
 
 ---
 
@@ -189,6 +187,33 @@ Several implementation decisions were made to keep the simulation efficient:
   optimality.
 - Priority zones are used as a tie-breaker when multiple shortest paths have
   the same total cost.
+
+---
+
+# Design
+
+The project follows an object-oriented design where each component is
+responsible for a specific part of the simulation.
+
+The main components are:
+
+- **Parser** parses and validates the map file;
+- **MapData** stores the parsed map configuration and simulation data;
+- **NavGraph** builds the navigation graph and computes shortest paths using
+  reverse Dijkstra;
+- **Scheduler** proposes, validates and commits drone movements every turn;
+- **Simulation** coordinates turn progression and restricted-connection
+  handling;
+- **MapRenderer** is responsible for drawing the map and simulation objects;
+- **DemoWindow** manages user interaction, animation and visualization.
+
+Simulation entities such as drones, zones, connections and moves are
+represented as dedicated data classes, separating application state from the
+algorithms that operate on it.
+
+This separation of responsibilities keeps parsing, pathfinding, scheduling,
+simulation logic and rendering independent, making the code easier to maintain,
+test and extend.
 
 ---
 
