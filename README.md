@@ -35,6 +35,56 @@ destination;
 
 ---
 
+# Instructions
+
+## Requirements
+
+- Python 3.12+
+- Pygame
+
+## Installation
+
+`make`
+
+## Run
+
+`make run`
+
+or
+
+`python3 main.py <map_file>`
+
+Example:
+
+`python3 main.py maps/simple.txt`
+
+---
+
+# Resources
+
+## Documentation
+
+- https://docs.python.org/3/
+- https://docs.python.org/3/library/heapq.html
+- https://www.pygame.org/docs/
+- https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+
+## AI Usage
+
+AI tools were used throughout the development process as an assistant,
+including:
+
+- discussing algorithm design;
+- reviewing implementation choices;
+- debugging specific issues;
+- explaining Python language features;
+- improving documentation and code comments.
+
+All design decisions, implementation, testing and final validation were
+performed manually.
+
+---
+
 # Algorithm
 
 ## Pathfinding
@@ -123,36 +173,22 @@ verify that movement, congestion and restricted connections behave as expected.
 
 ---
 
-# Instructions
+# Example
 
-## Requirements
+## Input
 
-- Python 3.12+
-- Pygame
+`python3 main.py maps/easy/02_simple_fork.txt`
 
-## Installation
+## Expected Output
 
-```bash
-make
+```text
+D1-A D2-B
+D1-End D2-End
 ```
 
-## Run
-
-```bash
-make run
-```
-
-or
-
-```bash
-python3 main.py <map_file>
-```
-
-Example:
-
-```bash
-python3 main.py maps/simple.txt
-```
+The simulation prints one line per turn, listing all drone movements that occur
+during that turn. The simulation ends when all drones have reached the
+destination zone.
 
 ---
 
@@ -214,30 +250,5 @@ algorithms that operate on it.
 This separation of responsibilities keeps parsing, pathfinding, scheduling,
 simulation logic and rendering independent, making the code easier to maintain,
 test and extend.
-
----
-
-# Resources
-
-## Documentation
-
-- https://docs.python.org/3/
-- https://docs.python.org/3/library/heapq.html
-- https://www.pygame.org/docs/
-- https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-
-## AI Usage
-
-AI tools were used throughout the development process as an assistant,
-including:
-
-- discussing algorithm design;
-- reviewing implementation choices;
-- debugging specific issues;
-- explaining Python language features;
-- improving documentation and code comments.
-
-All design decisions, implementation, testing and final validation were
-performed manually.
 
 ---
