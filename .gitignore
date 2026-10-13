@@ -3,3 +3,5 @@ __pycache__/
 .pytest_cache/
 /venv/
 /assets/wormsarmageddon/
+fly-in screenshot.png
+fly-in.pdf
